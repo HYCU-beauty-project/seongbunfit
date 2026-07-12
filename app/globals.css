@@ -3,6 +3,16 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* 성분핏 color tokens (스크린샷에서 추출, 대비 개선을 위해 살짝 어둡게 조정) */
+  --color-primary: #534ab7;
+  --color-primary-hover: #453d9e;
+  --color-primary-soft: #eeedfe;
+  --color-page-bg: #d9d9d9;
+  --color-ink: #1f1f24;
+  --color-ink-soft: #57555f;
+  --color-ink-faint: #85838f;
+  --color-border: #d9d7e6;
 }
 
 @theme inline {
@@ -12,15 +22,77 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* 성분핏은 라이트 테마 디자인이 고정이라 시스템 다크모드 자동전환은 끕니다. */
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* 클릭 가능한 요소는 항상 손가락 커서로 — 브라우저 기본값은 버튼도 화살표라 명시적으로 지정 */
+button:not(:disabled),
+select,
+summary,
+[role="button"] {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.28s ease-out both;
+}
+
+@keyframes bounce-dot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.dot {
+  animation: bounce-dot 1.1s ease-in-out infinite;
+}
+
+.chat-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: #d8d6ef;
+  border-radius: 999px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Tailwind preflight가 button의 cursor를 default로 리셋하기 때문에,
+   클릭 가능한 요소는 전부 손가락 커서가 보이도록 명시적으로 지정합니다. */
+button:not(:disabled),
+a,
+select,
+summary,
+[role="button"] {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
 }

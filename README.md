@@ -1,36 +1,131 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 성분핏 (IngredientFit)
 
-## Getting Started
+Figma 시안 + 기획서(성분핏.pdf) 기반 프로토타입입니다. 기존에 잡아둔 파일 구조(뼈대) 위에
+실제 동작하는 코드를 채워 넣었습니다.
 
-First, run the development server:
+## 실행 방법
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 http://localhost:3000 접속
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> Next.js 16 기준입니다 (`AGENTS.md` 참고 — Turbopack이 기본이라 `--turbopack` 플래그가 필요 없어요).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 페이지 구성
 
-## Learn More
+- `/` — 랜딩페이지
+- `/chat` — 면책 동의 모달(팝업, 페이지 이동 없음) → AI 채팅 추천 플로우
+- `/products` — 채팅 없이 DB 제품 목록을 검색·필터(고민/성분)·정렬(가격/ml당가격/용량)로 열람.
+  9개씩 페이지네이션되고, 카드 클릭 시 큰 이미지의 상세정보 모달이 떠요. 없는 제품은
+  "추가 요청하기" 버튼으로 실제 입력폼 모달(제품명/브랜드/링크/요청사항)을 거쳐 메일로 전송돼요.
+  헤더의 "AI 추천받기" 버튼으로 언제든 채팅으로 이동 가능
+- `/faq`, `/notice`(아코디언), `/terms`
 
-To learn more about Next.js, take a look at the following resources:
+## 채팅 플로우 (4단계)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **고민 입력**: 카테고리 칩 또는 자유 텍스트 → `POST /api/chat`이 카테고리 분석
+   (`GEMINI_API_KEY` 있으면 Google Gemini, 없으면 키워드 매칭 폴백)
+   - 피부 고민과 무관한 문장("안녕", "오늘 날씨 어때" 등)은 억지로 카테고리를 고르지 않고
+     "그 부분은 도와드리기 어려워요"라고 답하며 카테고리 칩을 다시 보여줘요. (예전엔 이런
+     경우에도 `categories[0]`으로 기본값 처리돼서 "안녕"에도 "주름 고민이시군요!"라고
+     틀리게 답하는 버그가 있었는데 고쳤어요.)
+2. **성분 추천 및 선택**: 카테고리별 핵심 성분 3개, 우측 패널에 효능/주의사항/적합 피부
+3. **예산 설정**: 칩 선택 또는 자유 입력("2만원대" 자동 파싱)
+4. **TOP3 결과**: `POST /api/recommend`가 가성비 점수 계산 후 TOP3 반환
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+대화 내역·선택 조건은 localStorage에 저장됩니다 (`lib/useLocalStorage.ts`,
+`useSyncExternalStore` 기반이라 이 레포의 `react-hooks` lint 규칙과도 충돌 없어요).
 
-## Deploy on Vercel
+**중간에 다시 선택하기**: 우측 "선택한 조건" 패널의 고민/성분/예산 태그를 클릭하면
+전체를 재시작하지 않고 그 항목만 다시 고를 수 있어요. 완전히 처음부터 하고 싶으면
+"처음부터 다시 시작하기" 버튼을 쓰면 돼요.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**계산법 투명하게 보여주기**: 채팅창 옆 "🧮 가성비 계산법 보기" 버튼을 누르면 공식 설명과
+함께, 지금 받은 TOP3 결과가 있다면 제품별 실제 계산값(배치/가격/예산 점수 → 최종 점수)을
+보여줘요. 맨 아래에는 전체 성분의 기준위치 목록도 있어요 — 성분마다 기준위치가 달라서
+같은 순번이라도 점수가 다르게 나오는 이유를 확인할 수 있어요.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**결과 카드 이미지로 저장/공유**: 각 추천 카드 우측 상단의 ⤓ 버튼을 누르면 `html-to-image`로
+카드를 PNG로 캡처해요. 모바일처럼 Web Share API를 지원하는 환경에서는 공유 시트가 바로 뜨고,
+아니면 다운로드돼요.
+
+**비교함**: 카드의 + 버튼으로 최대 4개까지 담아서 나란히 비교할 수 있어요. 우측 컬럼에
+"비교함 N"으로 항상 보이게 뒀고(마우스 올리면 설명 툴팁도 떠요), 카드의 버튼들도 아이콘만이
+아니라 "비교함에 담기" / "이미지 저장"처럼 글자로 표시해서 뭘 하는 버튼인지 바로 알 수 있게
+했어요. 다른 고민(예: 주름 → 미백)으로 재검색해도 비교함은 유지돼서 서로 다른 카테고리
+제품끼리도 비교 가능해요.
+
+## 가성비 점수 계산
+
+```
+최종 점수 = (전성분 배치 점수 × 0.60) + (ml당 가격 점수 × 0.30) + (예산 점수 × 0.10)
+```
+
+자세한 산식은 `lib/scoring/calculator.ts` 상단 주석 참고.
+(초기 랜딩페이지 시안엔 50/30/20이 적혀 있었는데, 확인 결과 60/30/10으로 최종 확정되었습니다.)
+
+**전성분 순번에 베이스 성분 포함 여부**: 정제수·글리세린 같은 베이스 성분을 제외하지 않고,
+원본 전성분 리스트 그대로 순번을 매기는 것으로 확정되었습니다(기준위치 숫자들은 이미 이를
+감안해 정해진 값이에요). `lib/products.ts`의 더미 `actualPosition` 값 자체는 프로토타입용
+예시 숫자라 실제 제품 데이터 연동 시 다시 채워질 값입니다 — 계산 공식은 이미 이 방식대로
+동작하고 있었고, 화면 설명 문구만 반대로 적혀 있던 걸 바로잡았습니다.
+
+## AI(Google Gemini) 실제로 연동하는 방법
+
+1. https://aistudio.google.com/apikey 에서 API 키 발급 (신용카드 등록 불필요, 무료 티어 있음)
+2. 프로젝트 루트의 `.env.local` 파일에 추가:
+   ```
+   GEMINI_API_KEY=AIza...
+   ```
+3. `npm run dev` 재시작 — 끝이에요. 코드 수정은 필요 없어요.
+
+키가 있으면 `lib/gemini/analyzer.ts`가 `/api/chat` 요청마다 Gemini(`gemini-3.1-flash-lite`)를 호출해서
+사용자 문장을 5개 카테고리 중 하나로 분류해요. 실패하거나 키가 없으면 자동으로 키워드 매칭으로
+조용히 폴백돼요(에러가 나서 화면이 깨지는 일은 없어요).
+
+무료 티어는 분당 요청 수 제한이 있어요 — 정확한 숫자는 Google이 모델/계정별로 자주 바꿔서,
+필요하면 [Google AI Studio](https://aistudio.google.com)에서 프로젝트별 실시간 한도를 확인하세요.
+데모/개발 용도로는 충분하지만, 짧은 시간에 너무 여러 번 연속으로 테스트하면 일시적으로
+폴백될 수 있어요.
+
+> ⚠️ **모델이 갑자기 404가 날 수 있어요.** Google이 예고 없이 특정 모델을 조기 중단하는 일이
+> 실제로 있었어요(`gemini-2.5-flash`가 공식 종료 예정일인 2026년 10월보다 훨씬 전인 7월 9일부터
+> 신규 요청에 404를 반환하기 시작한 사례 — Google 개발자 포럼에 보고됨). 그래서 지금은 지정한
+> 모델이 404를 반환하면 자동으로 `gemini-flash-latest`(Google이 계속 최신 안정 버전으로
+> 유지해주는 별칭)로 한 번 더 시도하도록 만들어뒀어요. 그래도 또 문제가 생기면
+> `lib/gemini/analyzer.ts`의 `PRIMARY_MODEL` 상수를
+> [Google 공식 모델 목록](https://ai.google.dev/gemini-api/docs/models)에서 "Stable" 표시된
+> 모델로 바꿔주세요.
+
+**실제로 Gemini가 쓰이고 있는지 확인하는 방법**
+- 채팅에서 카테고리 응답이 오면 말풍선 옆에 "✨ Gemini" 배지가 떠요 (키워드 매칭이면 "🔤 키워드 매칭" 배지)
+- 터미널에 `[gemini analyzer] ✅ Gemini 사용됨 — "..." → wrinkle` 같은 로그가 찍혀요
+- 실패 시엔 `❌ Gemini 호출 실패` 로그와 함께 자동 폴백돼요 (키 오타, 요청 한도 초과 등을 여기서 확인 가능)
+
+## 실제 서비스 연동 시 다음 단계
+
+| 항목 | 현재 상태 | 연동 방법 |
+|---|---|---|
+| 자연어 분석 | 키워드 매칭 폴백 | `.env.local`에 `GEMINI_API_KEY` 추가 → `lib/gemini/analyzer.ts`가 자동 전환 |
+| 제품 데이터 | `lib/products.ts` 더미 데이터 | `.env.local`에 Supabase 키 추가 → `lib/supabase/client.ts`로 `product_ingredients` 조회, `scoreProducts()`는 그대로 재사용 |
+| 구매 링크 | 쿠팡 검색 링크 (실제 특정 제품 페이지는 아님) | 실제 제품의 정확한 구매 URL로 `Product.purchaseUrl` 교체 |
+
+## 알아두면 좋은 것
+
+- **동의 화면이 다시 안 떠요**: 버그 아니에요. 한 번 동의하면 `localStorage`에
+  `ingredientfit:agreed=true`가 저장돼서 재방문 시 스킵돼요. 다시 보려면 브라우저
+  개발자도구 → Application → Local Storage에서 해당 키를 지우거나, 콘솔에서
+  `localStorage.clear()` 실행 후 새로고침하세요.
+- **`/products`의 "제품 추가 요청하기"**는 지금은 `mailto:` 링크예요(수신 이메일은
+  `app/products/page.tsx` 상단 `REQUEST_EMAIL` 상수). 실제 운영 시엔 팀 문의용
+  이메일이나 별도 폼으로 바꿔주세요.
+
+## 파일 구조
+
+기존에 잡아둔 구조 그대로이며, 빈 스켈레톤 파일에 내용을 채웠습니다.
+추가로 넣은 파일: `components/Header.tsx`, `components/chat/SidePanel.tsx`,
+`lib/ingredients.ts`, `lib/products.ts`, `lib/budgets.ts`, `lib/useLocalStorage.ts`
+(트리에는 없었지만 채팅 플로우에 필요해서 추가했어요).
