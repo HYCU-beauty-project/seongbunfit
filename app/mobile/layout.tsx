@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import MobileHeader from "@/components/mobile/MobileHeader";
 import MobileTabBar from "@/components/mobile/MobileTabBar";
+import "./mobile.css"
 
 export const metadata: Metadata = {
   title: "성분핏 모바일",
