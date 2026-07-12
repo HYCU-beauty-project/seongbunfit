@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-// 피부 고민 AI 채팅 화면 + 추천 TOP3 표시
-=======
 "use client";
 
 import { useState } from "react";
@@ -31,4 +28,3 @@ export default function ChatPage() {
     </main>
   );
 }
->>>>>>> origin/main
