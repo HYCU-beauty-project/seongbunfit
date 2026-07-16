@@ -2,6 +2,7 @@
 
 import type { Product } from "@/types";
 import { getIngredient, getCategoriesForIngredient } from "@/lib/ingredients";
+import ArrowRightIcon from "@/components/ArrowRightIcon";
 
 interface Props {
   product: Product | null;
@@ -101,7 +102,7 @@ export default function ProductDetailModal({ product, onClose }: Props) {
             className="mt-4 flex items-center justify-center gap-1.5 rounded-xl bg-[var(--color-primary)] py-3 text-[13px] font-medium text-white hover:bg-[var(--color-primary-hover)] transition-colors"
           >
             구매하러 가기
-            <span aria-hidden>→</span>
+            <ArrowRightIcon />
           </a>
         </div>
       </div>

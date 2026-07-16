@@ -56,7 +56,7 @@ export default function ScoreExplainer({ open, onClose, latestResult }: Props) {
             desc="실제 성분 위치 ÷ 기준 위치 배수로 계산해요. 1.0배 이하면 100점, 배수가 커질수록 점수가 떨어져 3.0배를 넘으면 0점이 돼요. 성분이 전성분표 앞쪽에 있을수록(=함량이 높을수록) 유리해요."
           />
           <FactorRow
-            title={`ml당 가격 점수 (${SCORE_WEIGHTS.price * 100}%)`}
+            title={`용량 대비 가격 점수 (${SCORE_WEIGHTS.price * 100}%)`}
             desc="같이 비교 중인 후보 제품들 중 ml당 가격이 가장 저렴한 제품을 100점 기준으로 놓고, 그보다 비싼 제품은 상대적으로 낮은 점수를 받아요."
           />
           <FactorRow
@@ -90,7 +90,7 @@ export default function ScoreExplainer({ open, onClose, latestResult }: Props) {
                   <p className="mt-2 text-center text-[11.5px] text-[var(--color-ink-soft)]">
                     {product.placementScore} × {SCORE_WEIGHTS.placement} + {product.priceScore} ×{" "}
                     {SCORE_WEIGHTS.price} + {product.budgetScore} × {SCORE_WEIGHTS.budget} ={" "}
-                    <span className="font-semibold text-[var(--color-primary)]">
+                    <span className="font-semibold text-[var(--color-accent-text)]">
                       {product.finalScore}
                     </span>
                   </p>

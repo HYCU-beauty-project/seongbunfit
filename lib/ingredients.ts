@@ -1,10 +1,14 @@
 import type { Category, Ingredient } from "@/types";
 
+// ⚠️ Supabase 연동 시 참고: 이 파일은 실제로는 ingredients 테이블이 돼요.
+// 지금은 categories 배열 안에 성분이 중첩되어 있지만(카테고리 하나당 성분 3개),
+// 실제 테이블에서는 ingredients가 독립적인 행이고 category_key 컬럼으로 연결돼요.
+// 전체 스키마는 lib/supabase/schema.sql을 참고하세요.
 export const categories: Category[] = [
   {
     key: "wrinkle",
     label: "주름·탄력",
-    keywords: ["주름", "탄력", "눈가", "팔자", "처짐", "노화", "안티에이징"],
+    keywords: ["주름", "탄력", "눈가", "팔자", "처짐", "노화", "안티에이징", "늘어짐", "쳐짐"],
     intro: "주름·탄력 고민이시군요! 아래 성분 중 관심 있는 걸 선택해주세요.",
     ingredients: [
       {
@@ -12,9 +16,10 @@ export const categories: Category[] = [
         name: "레티놀",
         refPosition: 12,
         effect: "주름 개선 대표 성분. 피부 재생 촉진, 초반 자극 주의.",
-        caution: "초반 자극·각질 가능, 자외선 차단 필수",
+        caution: "초반 자극·각질 가능, 자외선 차단 필수. 피부가 이미 붉거나 따가운 상태라면 진정 후 사용하세요.",
         goodFor: "일반~지성, 저농도(0.01~0.3%)부터 권장",
         recommended: true,
+        irritant: true,
       },
       {
         id: "adenosine",
@@ -70,7 +75,7 @@ export const categories: Category[] = [
   {
     key: "hydration",
     label: "수분·건조",
-    keywords: ["수분", "건조", "당김", "속건조", "보습"],
+    keywords: ["수분", "건조", "당김", "속건조", "보습", "푸석", "메마름"],
     intro: "수분·건조 고민이시군요! 아래 성분 중 관심 있는 걸 선택해주세요.",
     ingredients: [
       {
@@ -103,7 +108,7 @@ export const categories: Category[] = [
   {
     key: "pore",
     label: "모공·트러블",
-    keywords: ["모공", "트러블", "여드름", "블랙헤드", "피지", "뾰루지"],
+    keywords: ["모공", "트러블", "여드름", "블랙헤드", "피지", "뾰루지", "따가", "자극", "화끈", "예민", "붉어", "붉은기", "홍조", "가려", "간지러", "간지럽"],
     intro: "모공·트러블 고민이시군요! 아래 성분 중 관심 있는 걸 선택해주세요.",
     ingredients: [
       {
@@ -111,9 +116,10 @@ export const categories: Category[] = [
         name: "살리실산",
         refPosition: 15,
         effect: "모공 속 노폐물을 녹여 트러블 완화에 도움을 줘요.",
-        caution: "각질이 얇아질 수 있어 자외선 차단이 중요해요.",
+        caution: "각질이 얇아질 수 있어 자외선 차단이 중요해요. 피부가 이미 붉거나 따가운 상태라면 진정 후 사용하세요.",
         goodFor: "블랙헤드, 트러블이 잦은 지성 피부",
         recommended: true,
+        irritant: true,
       },
       {
         id: "centella",

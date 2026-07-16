@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Button from "./Button";
 import TermsContent from "@/components/TermsContent";
+import ArrowRightIcon from "@/components/ArrowRightIcon";
 
 const POINTS = [
   { text: "전성분 배치 순서 기반이며 정확한 성분 함량이 아닙니다", emphasize: false },
@@ -64,7 +65,7 @@ export default function Modal({ open, onAgree, onBack }: Props) {
           </Button>
           <Button variant="primary" className="flex-[1.4]" onClick={onAgree}>
             동의하고 시작하기
-            <span aria-hidden>→</span>
+            <ArrowRightIcon />
           </Button>
         </div>
       </div>

@@ -1,4 +1,31 @@
+/* 본문: Pretendard (가변 폰트, 눈누 공식 배포처) — @import는 다른 규칙보다 먼저 와야 해서
+   tailwindcss import보다 위에 둬요. */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+
 @import "tailwindcss";
+
+/* 제목: Gmarket Sans (Light/Medium/Bold 3종, 눈누 공식 배포처) */
+@font-face {
+  font-family: "Gmarket Sans";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansLight.woff")
+    format("woff");
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Gmarket Sans";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff")
+    format("woff");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Gmarket Sans";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff")
+    format("woff");
+  font-weight: 700;
+  font-display: swap;
+}
 
 :root {
   --background: #ffffff;
@@ -13,13 +40,35 @@
   --color-ink-soft: #57555f;
   --color-ink-faint: #85838f;
   --color-border: #d9d7e6;
+
+  /* 폰트: 제목은 Gmarket Sans, 본문은 Pretendard */
+  --font-heading: "Gmarket Sans", "Pretendard Variable", Pretendard, sans-serif;
+  --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR",
+    "Malgun Gothic", sans-serif;
+
+  /* 포인트 컬러 — 정교한 데이터/수치를 강조할 때만 아주 제한적으로 사용해요
+     (예: 카운트업 숫자, 최종 CTA 버튼). 보라색 브랜드 컬러를 대체하는 게 아니라
+     "여기 좀 봐주세요" 순간에만 쓰는 강조색이에요. */
+  /* 포인트 컬러 — 보라색이 베이스(80%), 민트는 "꼭 봐야 할 곳"에만 제한적으로(20%) 써요.
+     accent: 버튼 배경·블롭 장식처럼 배경으로 쓸 때 (밝고 선명해도 괜찮아요)
+     accent-text: 흰 배경 위에 글자색으로 쓸 때 (대비가 부족해지지 않게 더 진하게 조정) */
+  --color-accent: #9abdb6;
+  --color-accent-text: #1e6c5e;
+  --color-accent-soft: #e3f6f1;
+  /* 그라데이션 버튼(흰 글자)에 쓰는 좀 더 진한 민트예요 — 밝은 accent로 그라데이션을
+     만들면 흰 글자가 민트 쪽 끝에서 대비가 부족해져서, 흰 글자가 항상 잘 보이도록
+     명도를 낮춘 버전을 따로 뒀어요. */
+  --color-accent-deep: #36786a;
+  /* 보라색 배경 위에서 쓰는 밝은 민트 (대비 확보를 위해 명도를 올린 버전) */
+  --color-accent-on-dark: #88f9d4;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
 }
 
 /* 성분핏은 라이트 테마 디자인이 고정이라 시스템 다크모드 자동전환은 끕니다. */
@@ -27,8 +76,22 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  /* 한글은 기본적으로 아무 글자 사이에서나 줄바꿈될 수 있어서("구성," 이 "구"/"성,"으로
+     쪼개지는 식), 단어 단위(공백 기준)로만 줄바꿈되게 전역으로 설정해요. */
+  word-break: keep-all;
 }
+
+/* 제목: Gmarket Sans / 본문: Pretendard — 페이지 전체에서 자동으로 적용돼요.
+   h1~h3 태그를 쓰기만 하면 되고, 개별 컴포넌트에서 폰트를 따로 지정할 필요 없어요. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+}
+
+/* 눈누 배포처의 Gmarket Sans는 300/500/700 세 굵기만 있어서, 그 사이 굵기로
+   렌더링하려는 시도는 브라우저가 가장 가까운 값으로 보정해요(font-weight: 600 → 700 등). */
 
 /* 클릭 가능한 요소는 항상 손가락 커서로 — 브라우저 기본값은 버튼도 화살표라 명시적으로 지정 */
 button:not(:disabled),
@@ -95,4 +158,183 @@ summary,
 }
 button:disabled {
   cursor: not-allowed;
+}
+
+/* 랜딩 히어로 이미지가 살짝 위아래로 떠 있는 느낌을 주는 애니메이션 */
+@keyframes gentle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.animate-float {
+  animation: gentle-float 5s ease-in-out infinite;
+}
+.animate-float-delayed {
+  animation: gentle-float 5s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+
+/* "서비스 한눈에 보기" 스텝을 잇는 선이 왼쪽에서 오른쪽으로 그려지는 효과 */
+@keyframes draw-line {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.animate-draw-line {
+  animation: draw-line 1.1s ease-out forwards;
+  transform-origin: left;
+}
+
+/* 캐러셀처럼 자체 인디케이터(점)가 있는 가로 스크롤 영역은 네이티브 스크롤바를 숨겨요 */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* 랜딩 히어로 배경의 은은하게 움직이는 블롭 */
+@keyframes blob-move {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(20px, -15px) scale(1.08);
+  }
+  66% {
+    transform: translate(-15px, 15px) scale(0.95);
+  }
+}
+.animate-blob {
+  animation: blob-move 9s ease-in-out infinite;
+}
+.animate-blob-delayed {
+  animation: blob-move 9s ease-in-out infinite;
+  animation-delay: 3s;
+}
+.animate-blob-slow {
+  animation: blob-move 13s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+/* 아래로 스크롤하라는 힌트 화살표 */
+@keyframes bounce-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+/* 성분 데이터가 모여서 가성비 점수가 되는 느낌의 가벼운 움직임 (Lottie 대체) */
+@keyframes orbit-in {
+  0% {
+    transform: translate(var(--start-x), var(--start-y)) scale(0.6);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.9;
+  }
+}
+.animate-orbit-in {
+  animation: orbit-in 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 배경의 흐릿한 성분/분자 장식 도형이 아주 천천히 회전하는 효과 */
+@keyframes slow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-slow-spin {
+  animation: slow-spin 40s linear infinite;
+}
+.animate-slow-spin-reverse {
+  animation: slow-spin 55s linear infinite reverse;
+}
+
+/* 카메라 진단 아이콘 주위로 물결이 은은하게 퍼지는 효과 (Tailwind 기본 animate-ping보다
+   느리고 부드럽게) */
+@keyframes ping-slow {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+.animate-ping-slow {
+  animation: ping-slow 2.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.animate-ping-slow-delayed {
+  animation: ping-slow 2.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  animation-delay: 1.3s;
+}
+
+/* 헤드라인 강조 단어(예: "3배") — 민트 대신, 흰 글자에 보라색 외곽선/그림자를 둘러서
+   구분해요. text-shadow를 여러 방향으로 겹쳐서 stroke처럼 보이게 했어요(브라우저 호환성이
+   -webkit-text-stroke보다 좋아요). */
+.text-emphasis-soft {
+  color: var(--color-accent-on-dark);
+  text-underline-offset: 0.12em;
+  text-decoration: underline;
+  text-decoration-color: rgba(167, 215, 206, 0.6);
+  text-decoration-thickness: 2px;
+}
+
+/* 모바일 카드의 아이콘이 화면에 나타난 뒤 한 번 통통 튀는 느낌을 줘요(터치 전에도
+   "여기 움직여요"라는 힌트가 되도록) */
+@keyframes gentle-bounce-once {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-4px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  65% {
+    transform: translateY(-2px);
+  }
+}
+.animate-bounce-once {
+  animation: gentle-bounce-once 0.9s ease-out;
+}
+
+/* 화장품 라인 아이콘이 옆으로 끊김없이 흐르는 마퀴(무한 슬라이드) */
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee-scroll 22s linear infinite;
 }
