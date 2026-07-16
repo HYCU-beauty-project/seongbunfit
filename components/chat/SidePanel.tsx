@@ -37,25 +37,10 @@ export default function SidePanel(props: Props) {
           </p>
           <p className="mt-0.5 text-[16px] font-bold text-[var(--color-ink)]">{ingredient.name}</p>
         </div>
-        <dl className="space-y-3 px-4 pb-4">
-          <div>
-            <dt className="text-[11px] font-semibold text-[var(--color-ink-soft)]">효능</dt>
-            <dd className="mt-0.5 text-[12.5px] text-[var(--color-ink)] leading-relaxed">
-              {ingredient.effect}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[11px] font-semibold text-[var(--color-ink-soft)]">주의사항</dt>
-            <dd className="mt-0.5 text-[12.5px] text-[var(--color-ink)] leading-relaxed">
-              {ingredient.caution}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[11px] font-semibold text-[var(--color-ink-soft)]">적합 피부</dt>
-            <dd className="mt-0.5 text-[12.5px] text-[var(--color-ink)] leading-relaxed">
-              {ingredient.goodFor}
-            </dd>
-          </div>
+        <dl className="space-y-2.5 px-4 pb-4">
+          <DetailRow icon="✨" label="효능" value={ingredient.effect} />
+          <DetailRow icon="⚠️" label="주의사항" value={ingredient.caution} />
+          <DetailRow icon="🧴" label="적합 피부" value={ingredient.goodFor} />
         </dl>
       </div>
     );
@@ -104,6 +89,18 @@ export default function SidePanel(props: Props) {
       <p className="mt-3 text-[10.5px] text-[var(--color-ink-faint)]">
         태그를 누르면 해당 항목만 다시 선택할 수 있어요.
       </p>
+    </div>
+  );
+}
+
+function DetailRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-gray-50 px-3 py-2.5">
+      <dt className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--color-ink)]">
+        <span aria-hidden>{icon}</span>
+        {label}
+      </dt>
+      <dd className="mt-1 text-[12.5px] text-[var(--color-ink)] leading-relaxed">{value}</dd>
     </div>
   );
 }

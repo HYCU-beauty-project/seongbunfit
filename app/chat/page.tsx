@@ -4,6 +4,7 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import Modal from "@/components/ui/Modal";
 import ChatWindow from "@/components/chat/ChatWindow";
+import Footer from "@/components/Footer";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 
 export default function ChatPage() {
@@ -25,6 +26,7 @@ export default function ChatPage() {
       ) : (
         <ChatWindow />
       )}
+      <Footer />
     </main>
   );
 }

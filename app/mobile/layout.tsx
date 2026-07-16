@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import MobileHeader from "@/components/mobile/MobileHeader";
-import MobileTabBar from "@/components/mobile/MobileTabBar";
-import "./mobile.css"
 
 export const metadata: Metadata = {
   title: "성분핏 모바일",
@@ -9,10 +7,12 @@ export const metadata: Metadata = {
 
 export default function MobileLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto min-h-screen max-w-[480px] bg-white">
+    <div
+      data-mobile-shell
+      className="relative mx-auto w-full min-h-screen max-w-[480px] overflow-x-hidden bg-white [transform:translateZ(0)]"
+    >
       <MobileHeader />
-      <div className="pb-[60px]">{children}</div>
-      <MobileTabBar />
+      {children}
     </div>
   );
 }

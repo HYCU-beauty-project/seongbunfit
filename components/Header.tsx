@@ -1,54 +1,142 @@
-import Link from "next/link";
+"use client";
 
-export default function Header() {
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+
+interface Props {
+  // 랜딩페이지처럼 보라색 히어로 위에 얹혀서, 스크롤 전엔 투명+흰 글자로 떠 있다가
+  // 히어로를 벗어나면 원래 흰 배경 헤더로 바뀌는 모드예요. 다른 페이지는 이 prop 없이
+  // 지금까지처럼 항상 흰 배경 고정 헤더로 동작해요.
+  transparentOverHero?: boolean;
+}
+
+const LINKS = [
+  { href: "/#service", label: "서비스 소개" },
+  { href: "/products", label: "화장품 검색" },
+  { href: "/face-analysis", label: "안면인식" },
+  { href: "/notice", label: "공지사항" },
+  { href: "/event", label: "이벤트" },
+  { href: "/faq", label: "FAQ" },
+];
+
+export default function Header({ transparentOverHero = false }: Props) {
+  const [scrolled, setScrolled] = useState(!transparentOverHero);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!transparentOverHero) return;
+    function onScroll() {
+      setScrolled(window.scrollY > 80);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [transparentOverHero]);
+
+  const floating = transparentOverHero && !scrolled;
+  const linkClass = floating
+    ? "hover:text-white transition-colors"
+    : "hover:text-[var(--color-ink)] transition-colors";
+
   return (
-    <header className="w-full bg-white border-b border-[var(--color-border)]">
-      <div className="mx-auto max-w-5xl flex items-center justify-between px-6 py-4">
-        <Link
-          href="/"
-          className="flex items-center gap-2 font-semibold text-[15px] text-[var(--color-ink)]"
-        >
-          <span
-            aria-hidden
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[var(--color-primary-soft)] text-[var(--color-primary)]"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 7h6l2-3h2l2 3h6" />
-              <rect x="3" y="7" width="18" height="14" rx="2" />
-            </svg>
-          </span>
-          성분핏
-        </Link>
-        <nav className="flex items-center gap-6 text-[13px] text-[var(--color-ink-soft)]">
-          <Link href="/#service" className="hover:text-[var(--color-ink)] transition-colors">
-            서비스 소개
-          </Link>
-          <Link href="/products" className="hover:text-[var(--color-ink)] transition-colors">
-            화장품 검색
-          </Link>
-          <Link href="/notice" className="hover:text-[var(--color-ink)] transition-colors">
-            공지사항
-          </Link>
-          <Link href="/faq" className="hover:text-[var(--color-ink)] transition-colors">
-            FAQ
-          </Link>
+    <>
+      <header
+        className={`w-full transition-colors duration-300 ${
+          transparentOverHero ? "fixed top-0 left-0 right-0 z-50" : "relative"
+        } ${
+          floating
+            ? "bg-transparent border-b border-transparent"
+            : "bg-white border-b border-[var(--color-border)]"
+        }`}
+      >
+        <div className="mx-auto max-w-5xl flex items-center justify-between px-6 py-4">
           <Link
-            href="/chat"
-            className="rounded-lg bg-[var(--color-primary)] px-3.5 py-2 text-[12.5px] font-medium text-white hover:bg-[var(--color-primary-hover)] transition-colors"
+            href="/"
+            className={`flex items-center gap-2 font-semibold text-[15px] transition-colors ${
+              floating ? "text-white" : "text-[var(--color-ink)]"
+            }`}
           >
-            AI 추천받기
+            <Image
+              src="/logo/logo_color.png"
+              alt=""
+              width={46}
+              height={46}
+              className={`h-[46px] w-[46px] object-contain transition-all ${
+                floating ? "brightness-0 invert" : "[filter:contrast(1.25)_saturate(1.15)]"
+              }`}
+            />
+            성분핏
           </Link>
-        </nav>
-      </div>
-    </header>
+
+          {/* 데스크톱 폭(md 이상)에서만 가로 메뉴 전체를 보여줘요 */}
+          <nav
+            className={`hidden md:flex items-center gap-5 text-[13px] transition-colors ${
+              floating ? "text-white/85" : "text-[var(--color-ink-soft)]"
+            }`}
+          >
+            {LINKS.map((link) => (
+              <Link key={link.href} href={link.href} className={linkClass}>
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              href="/chat"
+              className={`rounded-lg border-[1.5px] px-3.5 py-[7px] text-[12.5px] font-semibold transition-colors ${
+                floating
+                  ? "border-white text-white hover:bg-white/15"
+                  : "border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+              }`}
+            >
+              AI 추천받기
+            </Link>
+          </nav>
+
+          {/* md 미만(창을 좁혔을 때, 태블릿 폭 등)에서는 햄버거로 대체해요 */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? "메뉴 닫기" : "메뉴 열기"}
+            aria-expanded={menuOpen}
+            className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:hidden ${
+              floating ? "text-white hover:bg-white/15" : "text-[var(--color-ink)] hover:bg-gray-100"
+            }`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              {menuOpen ? <path d="M18 6 6 18M6 6l12 12" /> : <path d="M3 6h18M3 12h18M3 18h18" />}
+            </svg>
+          </button>
+        </div>
+
+        {/* 모바일 드롭다운 메뉴 */}
+        {menuOpen && (
+          <nav className="animate-fade-up border-t border-[var(--color-border)] bg-white px-6 py-3 md:hidden">
+            {LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className="block py-2.5 text-[13.5px] text-[var(--color-ink-soft)] hover:text-[var(--color-primary)] transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              href="/chat"
+              onClick={() => setMenuOpen(false)}
+              className="mt-2 block rounded-lg border-[1.5px] border-[var(--color-primary)] px-3.5 py-2.5 text-center text-[13px] font-semibold text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
+            >
+              AI 추천받기
+            </Link>
+          </nav>
+        )}
+      </header>
+      {/* fixed 헤더는 문서 흐름에서 빠지니까, 아래 콘텐츠가 헤더 밑에 깔리지 않도록
+          항상 같은 높이만큼 자리를 대신 차지해줘요(스크롤 상태에 따라 넣었다 뺐다 하면
+          그 순간 화면이 갑자기 밀리는 버그가 생겨서, 항상 고정으로 넣어요). 히어로
+          섹션 쪽에서 이 높이만큼 음수 마진(-mt-[65px])을 줘서 화면 맨 위까지 차게
+          보이도록 상쇄시켜요. */}
+      {transparentOverHero && <div className="h-[65px]" aria-hidden />}
+    </>
   );
 }

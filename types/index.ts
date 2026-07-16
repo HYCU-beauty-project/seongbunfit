@@ -14,6 +14,9 @@ export interface Ingredient {
   caution: string;
   goodFor: string;
   recommended?: boolean;
+  // 자극/각질제거 성분(살리실산, 레티놀 등) — 이미 피부가 자극된 상태일 땐
+  // 이 성분을 1순위로 추천하면 안 돼요. lib/safety.ts에서 이 값을 보고 순위를 조정해요.
+  irritant?: boolean;
 }
 
 export interface Category {
@@ -51,6 +54,7 @@ export interface ScoredProduct extends Product {
   budgetScore: number;
   finalScore: number;
   pricePerMl: number;
+  reason?: string;
 }
 
 // 채팅 메시지
@@ -74,6 +78,11 @@ export interface AiIngredientsMessage {
   role: "ai";
   kind: "ingredients";
   categoryKey: CategoryKey;
+  intro?: string;
+  // 서버에서 안전 조정(자극 성분 순위 내림)이 적용된 실제 성분 목록이에요.
+  // 없으면(예전 대화 기록) categoryKey로 정적 데이터를 다시 조회해서 폴백해요.
+  ingredients?: Ingredient[];
+  safetyNotice?: string;
   usedAi?: boolean;
   createdAt: number;
 }

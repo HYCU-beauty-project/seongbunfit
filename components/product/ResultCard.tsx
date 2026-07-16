@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import type { Ingredient, ScoredProduct } from "@/types";
-import { reasonFor } from "@/lib/scoring/calculator";
+import IngredientTag from "@/components/IngredientTag";
+import ArrowRightIcon from "@/components/ArrowRightIcon";
 
 interface Props {
   rank: number;
@@ -68,7 +69,7 @@ export default function ResultCard({
   }
 
   return (
-    <div ref={cardRef} className="rounded-xl border border-[var(--color-border)] bg-white p-4">
+    <div ref={cardRef} className="flex h-full flex-col rounded-xl border border-[var(--color-border)] bg-white p-4">
       <div className="flex items-start gap-3">
         <div
           className="h-14 w-14 shrink-0 rounded-lg"
@@ -89,17 +90,23 @@ export default function ResultCard({
         </div>
       </div>
 
-      <div className="mt-3 rounded-lg bg-[var(--color-primary-soft)]/60 px-3 py-2.5 text-[11.5px] text-[var(--color-ink-soft)] leading-relaxed">
-        <p>
-          {ingredient.name} 전성분 배치 순위 {product.actualPosition}번째 (배치 점수{" "}
-          {product.placementScore}점)
+      {/* flex-1로 남는 공간을 채워서, 카드마다 추천 이유 길이가 달라도
+          아래 버튼들이 항상 같은 위치에 오게 했어요. */}
+      <div className="mt-3 flex-1 rounded-lg bg-[var(--color-primary-soft)]/60 px-3 py-2.5 text-[11.5px] text-[var(--color-ink-soft)] leading-relaxed">
+        <div className="flex items-center gap-1.5">
+          <IngredientTag ingredientId={ingredient.id} size={18} />
+          <span className="text-[11.5px] font-semibold text-[var(--color-ink)]">{ingredient.name}</span>
+        </div>
+        <p className="mt-1.5">
+          전성분 배치 순위 {product.actualPosition}번째 (배치 점수 {product.placementScore}점)
         </p>
-        <p className="mt-0.5 font-medium text-[var(--color-ink)]">
+        <p className="mt-0.5 flex items-center gap-1 font-semibold text-[var(--color-accent-text)]">
+          <SparkleIcon />
           가성비 지수: {product.finalScore}
         </p>
         <p className="mt-1.5">
           <span className="font-medium text-[var(--color-ink)]">추천 이유 </span>
-          {reasonFor(product, ingredient)}
+          {product.reason || "가성비 조건에 맞는 추천 제품이에요."}
         </p>
       </div>
 
@@ -136,8 +143,23 @@ export default function ResultCard({
         className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-[var(--color-primary)] py-2.5 text-[12.5px] font-medium text-white hover:bg-[var(--color-primary-hover)] transition-colors"
       >
         구매하러 가기
-        <span aria-hidden>→</span>
+        <ArrowRightIcon />
       </a>
     </div>
+  );
+}
+
+function SparkleIcon() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      className="shrink-0"
+    >
+      <path d="M12 2.5c.9 4 2.2 6.3 4.5 7.5-2.3 1.2-3.6 3.5-4.5 7.5-.9-4-2.2-6.3-4.5-7.5 2.3-1.2 3.6-3.5 4.5-7.5Z" />
+    </svg>
   );
 }

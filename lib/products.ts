@@ -4,6 +4,12 @@ import type { Product } from "@/types";
 // 직접 구성한 가상의 제품/브랜드를 사용합니다. (팀 메모 참고)
 // actualPosition: 베이스 성분(정제수, 글리세린 등) 포함, 전체 전성분 리스트 기준 실제 배치 순번
 // (기준위치(refPosition)는 베이스 성분이 앞쪽에 오는 것을 이미 감안해 정해진 값입니다)
+//
+// ⚠️ Supabase 연동 시 참고: 이 파일의 Row는 실제로는 products 테이블과
+// product_ingredients 테이블(제품↔성분 다대다 관계) 두 개로 나뉘어요. 지금은
+// "제품 하나 = 핵심 성분 하나"로 단순화했지만, 실제 데이터는 제품 하나에 성분이
+// 수십 개 있고 그중 사용자가 고른 성분의 위치만 보는 구조예요. 전체 스키마와
+// 마이그레이션 방향은 lib/supabase/schema.sql을 참고하세요.
 
 const colors = ["#EDE9FB", "#F5EEE6", "#E8F1EC", "#F1E9EC", "#EAF0F5", "#F6F1E4"];
 

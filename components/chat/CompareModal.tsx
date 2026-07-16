@@ -170,7 +170,7 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
   return (
     <div className="flex items-center justify-between gap-1">
       <dt className="text-[var(--color-ink-faint)]">{label}</dt>
-      <dd className={strong ? "font-semibold text-[var(--color-primary)]" : "text-[var(--color-ink)]"}>
+      <dd className={strong ? "font-semibold text-[var(--color-accent-text)]" : "text-[var(--color-ink)]"}>
         {value}
       </dd>
     </div>

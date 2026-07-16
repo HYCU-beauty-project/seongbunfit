@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { categories, getCategory, getIngredientInCategory } from "@/lib/ingredients";
 import { budgetOptions, getBudget, parseBudgetText } from "@/lib/budgets";
 import { useLocalStorage } from "@/lib/useLocalStorage";
@@ -16,8 +17,12 @@ import IngredientCard from "./IngredientCard";
 import SidePanel from "./SidePanel";
 import ChatInput from "./ChatInput";
 import ScoreExplainer from "./ScoreExplainer";
-import CompareTray from "./CompareTray";
 import CompareModal from "./CompareModal";
+import CompactConditionsBar from "./CompactConditionsBar";
+import ResultCarousel from "./ResultCarousel";
+import MobileActionFabs from "./MobileActionFabs";
+import UtilityToolbar from "./UtilityToolbar";
+import ContactModal from "@/components/ContactModal";
 import ResultCard from "@/components/product/ResultCard";
 
 const MAX_COMPARE_ITEMS = 4;
@@ -44,7 +49,15 @@ function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export default function ChatWindow() {
+interface ChatWindowProps {
+  // /mobile 페이지는 480px짜리 컨테이너 안에 있어도, 실제 브라우저 창이 넓으면(예: 데스크톱에서
+  // 개발자도구 없이 그냥 열었을 때) md: 기준이 "진짜 뷰포트 너비"로 판단돼서 2단 레이아웃이
+  // 좁은 컨테이너 안에서 찌그러져요. 이 값을 true로 주면 뷰포트 크기와 상관없이 항상 1단으로
+  // 쌓아서 보여줘요.
+  forceStacked?: boolean;
+}
+
+export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
   const [messages, setMessages, hydrated] = useLocalStorage<ChatMessage[]>(
     "ingredientfit:messages",
     initialMessages
@@ -56,18 +69,37 @@ export default function ChatWindow() {
   const [draft, setDraft] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showScoreExplainer, setShowScoreExplainer] = useState(false);
-  const [showCalcTip, setShowCalcTip] = useState(false);
   const [showCompareModal, setShowCompareModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   const [previewIngredientId, setPreviewIngredientId] = useState<string | null>(null);
   const [compareItems, setCompareItems, compareHydrated] = useLocalStorage<CompareItem[]>(
     "ingredientfit:compare",
     []
   );
   const scrollRef = useRef<HTMLDivElement>(null);
+  const searchParams = useSearchParams();
+  const autoTriggeredRef = useRef(false);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping]);
+
+  // 랜딩페이지 "이런 고민" 카드에서 /chat?concern=wrinkle 같은 링크로 들어오면,
+  // 그 고민을 자동으로 입력한 것처럼 바로 성분 추천까지 진행해줘요.
+  // 이미 대화가 진행 중인 상태(localStorage에 남아있는 이전 대화)라면 건드리지 않아요.
+  useEffect(() => {
+    if (!hydrated || autoTriggeredRef.current) return;
+    const concern = searchParams.get("concern");
+    if (!concern) return;
+    const isFreshChat =
+      messages.length === 1 && messages[0].id === WELCOME_ID && !conditions.categoryKey;
+    if (!isFreshChat) return;
+    const category = categories.find((c) => c.key === concern);
+    if (!category) return;
+    autoTriggeredRef.current = true;
+    handleConcernInput(`${category.label} 고민이에요`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, searchParams, messages, conditions]);
 
   const lastMessageId = messages[messages.length - 1]?.id;
 
@@ -101,31 +133,7 @@ export default function ChatWindow() {
         body: JSON.stringify({ text }),
       });
       const data = await res.json();
-
-      if (!data.categoryKey) {
-        // 5개 고민 카테고리 중 어디에도 해당하지 않는 질문 — 억지로 카테고리를 고르지 않고
-        // 다시 물어봐요. 새 intro 메시지를 넣으면 카테고리 칩도 다시 떠요.
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: makeId(),
-            role: "ai",
-            kind: "intro",
-            text: "죄송해요, 그 부분은 제가 도와드리기 어려워요. 피부 고민을 알려주시면 성분을 추천해드릴게요!",
-            createdAt: Date.now(),
-          },
-        ]);
-        return;
-      }
-
-      const categoryKey = data.categoryKey as CategoryKey;
-      const usedAi = Boolean(data.usedAi);
-
-      setMessages((prev) => [
-        ...prev,
-        { id: makeId(), role: "ai", kind: "ingredients", categoryKey, usedAi, createdAt: Date.now() },
-      ]);
-      setConditions({ categoryKey, ingredientId: null, budgetId: null });
+      applyConcernApiResponse(data);
     } catch {
       pushAiText("성분 분석 중 문제가 생겼어요. 다시 한 번 말씀해 주시겠어요?");
     } finally {
@@ -133,7 +141,74 @@ export default function ChatWindow() {
     }
   }
 
+  // /api/chat 응답 하나를 메시지로 반영해요. handleConcernInput과
+  // tryHandleTopicSwitch가 API를 중복 호출하지 않고 이 함수를 같이 써요.
+  function applyConcernApiResponse(data: {
+    clarifyingQuestion?: string;
+    categoryKey?: CategoryKey | null;
+    usedAi?: boolean;
+    intro?: string;
+    ingredients?: unknown;
+    safetyNotice?: string;
+  }) {
+    if (typeof data.clarifyingQuestion === "string" && data.clarifyingQuestion) {
+      // 너무 막연한 문장이라 AI가 카테고리를 억지로 고르는 대신 되물어봐요.
+      // intro 메시지로 넣으면 카테고리 칩도 다시 뜨니까, 사용자가 직접 답하거나
+      // 칩을 눌러서 바로 골라도 돼요 — 진짜 멀티턴처럼 자연스럽게 이어져요.
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: makeId(),
+          role: "ai",
+          kind: "intro",
+          text: data.clarifyingQuestion as string,
+          createdAt: Date.now(),
+        },
+      ]);
+      return;
+    }
+
+    if (!data.categoryKey) {
+      // 5개 고민 카테고리 중 어디에도 해당하지 않는 질문 — 억지로 카테고리를 고르지 않고
+      // 다시 물어봐요. 새 intro 메시지를 넣으면 카테고리 칩도 다시 떠요.
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: makeId(),
+          role: "ai",
+          kind: "intro",
+          text: "죄송해요, 그 부분은 제가 도와드리기 어려워요. 피부 고민을 알려주시면 성분을 추천해드릴게요!",
+          createdAt: Date.now(),
+        },
+      ]);
+      return;
+    }
+
+    const categoryKey = data.categoryKey as CategoryKey;
+    const usedAi = Boolean(data.usedAi);
+    const intro = typeof data.intro === "string" ? data.intro : undefined;
+    const ingredients = Array.isArray(data.ingredients) ? data.ingredients : undefined;
+    const safetyNotice = typeof data.safetyNotice === "string" ? data.safetyNotice : undefined;
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: makeId(),
+        role: "ai",
+        kind: "ingredients",
+        categoryKey,
+        intro,
+        ingredients,
+        safetyNotice,
+        usedAi,
+        createdAt: Date.now(),
+      },
+    ]);
+    setConditions({ categoryKey, ingredientId: null, budgetId: null });
+  }
+
   function handleIngredientSelect(categoryKey: CategoryKey, ingredientId: string, ingredientName: string) {
+    if (isTyping) return;
     pushUser(`${ingredientName}로 찾아줘요!`);
     setConditions((prev) => ({ ...prev, categoryKey, ingredientId }));
     setIsTyping(true);
@@ -153,6 +228,7 @@ export default function ChatWindow() {
   }
 
   async function handleBudgetSelect(budgetId: string) {
+    if (isTyping) return;
     const budget = getBudget(budgetId);
     pushUser(budget.label);
     setIsTyping(true);
@@ -190,7 +266,7 @@ export default function ChatWindow() {
     }
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const text = draft.trim();
     if (!text || isTyping) return;
 
@@ -205,7 +281,11 @@ export default function ChatWindow() {
       if (matched) {
         setDraft("");
         handleIngredientSelect(category.key, matched.id, matched.name);
-      } else {
+        return;
+      }
+      // 성분 이름이 아니면, 혹시 아예 다른 고민으로 넘어가신 건 아닌지 먼저 확인해봐요.
+      const switched = await tryHandleTopicSwitch(text);
+      if (!switched) {
         pushUser(text);
         setDraft("");
         pushAiText("아래 카드 중에서 관심 있는 성분을 선택해주세요 🙂");
@@ -215,11 +295,16 @@ export default function ChatWindow() {
 
     if (step === "budget") {
       const parsed = parseBudgetText(text);
-      setDraft("");
       if (parsed) {
+        setDraft("");
         handleBudgetSelect(parsed.id);
-      } else {
+        return;
+      }
+      // 예산 형식이 아니면, 혹시 아예 다른 고민으로 넘어가신 건 아닌지 먼저 확인해봐요.
+      const switched = await tryHandleTopicSwitch(text);
+      if (!switched) {
         pushUser(text);
+        setDraft("");
         pushAiText("예산 범위를 버튼으로 선택하거나 '1만원', '2만원대'처럼 입력해 주세요.");
       }
       return;
@@ -228,6 +313,33 @@ export default function ChatWindow() {
     // step === 'result' -> start a new round in the same conversation
     setConditions(initialConditions);
     handleConcernInput(text);
+  }
+
+  // 성분/예산 선택 단계에서 입력이 형식에 안 맞을 때, 완전히 다른 고민으로 화제가
+  // 바뀐 건 아닌지 조용히 확인해요. 진짜로 새 고민이면 그 고민으로 새로 시작하고,
+  // 아니면(그냥 형식을 잘못 입력한 거면) false를 반환해서 기존 안내 문구가 뜨게 해요.
+  async function tryHandleTopicSwitch(text: string): Promise<boolean> {
+    setIsTyping(true);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+      if (data.categoryKey && !data.clarifyingQuestion) {
+        setDraft("");
+        pushUser(text);
+        setConditions(initialConditions);
+        applyConcernApiResponse(data);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    } finally {
+      setIsTyping(false);
+    }
   }
 
   function handleRestart() {
@@ -328,8 +440,12 @@ export default function ChatWindow() {
 
   return (
     <div className="min-h-[calc(100vh-65px)] bg-[var(--color-primary-soft)] px-4 py-10">
-      <div className="mx-auto animate-fade-up grid max-w-4xl gap-4 md:grid-cols-[1fr_260px]">
-        <div className="flex h-[640px] flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
+      <div
+        className={`mx-auto animate-fade-up grid max-w-4xl gap-4 ${
+          forceStacked ? "" : "md:grid-cols-[1fr_260px]"
+        }`}
+      >
+        <div className="relative flex h-[640px] flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="border-b border-[var(--color-border)] px-4 py-3">
             <span className="text-[12.5px] font-semibold text-[var(--color-ink)]">
               성분핏 AI 상담
@@ -348,18 +464,29 @@ export default function ChatWindow() {
                     onIngredientPreview={setPreviewIngredientId}
                     compareIds={compareItems.map((item) => item.id)}
                     onToggleCompare={handleToggleCompare}
+                    forceStacked={forceStacked}
                     onCategoryChip={(key) => {
                       const c = getCategory(key);
                       handleConcernInput(`${c.label} 고민이에요`);
                     }}
                     onIngredientSelect={handleIngredientSelect}
                     onBudgetChip={handleBudgetSelect}
+                    disabled={isTyping}
                   />
                 ))}
                 {isTyping && <TypingBubble />}
               </>
             )}
           </div>
+
+          {forceStacked && (
+            <MobileActionFabs
+              compareCount={compareHydrated ? compareItems.length : 0}
+              onOpenCalc={() => setShowScoreExplainer(true)}
+              onOpenCompare={() => setShowCompareModal(true)}
+              onOpenContact={() => setShowContactModal(true)}
+            />
+          )}
 
           <ChatInput
             value={draft}
@@ -379,46 +506,45 @@ export default function ChatWindow() {
         </div>
 
         <div className="space-y-3">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowScoreExplainer(true)}
-              onMouseEnter={() => setShowCalcTip(true)}
-              onMouseLeave={() => setShowCalcTip(false)}
-              onFocus={() => setShowCalcTip(true)}
-              onBlur={() => setShowCalcTip(false)}
-              className="w-full rounded-xl border border-dashed border-[var(--color-primary)]/40 bg-white py-2.5 text-[12px] font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)] transition-colors"
-            >
-              🧮 가성비 계산법 보기
-            </button>
-            {showCalcTip && (
-              <div className="animate-fade-up absolute left-0 right-0 top-full z-30 mt-2 rounded-lg bg-[var(--color-ink)] px-3 py-2.5 text-[11px] leading-relaxed text-white shadow-lg">
-                점수가 어떻게 계산되는지 공식과 실제 숫자를 확인할 수 있어요.
-                <span className="absolute -top-1 left-6 h-2 w-2 rotate-45 bg-[var(--color-ink)]" />
-              </div>
-            )}
-          </div>
-
-          {compareHydrated && (
-            <CompareTray count={compareItems.length} onOpen={() => setShowCompareModal(true)} />
-          )}
-
-          {showSidePanel && (
-            <SidePanel
-              mode="conditions"
-              category={category}
-              ingredient={ingredient}
-              budget={budget}
-              onEditCategory={handleEditCategory}
-              onEditIngredient={conditions.ingredientId ? handleEditIngredient : undefined}
-              onEditBudget={conditions.budgetId ? handleEditBudget : undefined}
+          {!forceStacked && (
+            <UtilityToolbar
+              onOpenCalc={() => setShowScoreExplainer(true)}
+              compareCount={compareHydrated ? compareItems.length : 0}
+              onOpenCompare={() => setShowCompareModal(true)}
+              onOpenContact={() => setShowContactModal(true)}
             />
           )}
 
-          {step === "ingredient" && previewIngredient && (
+          {showSidePanel &&
+            (forceStacked ? (
+              <CompactConditionsBar
+                category={category}
+                ingredient={ingredient}
+                budget={budget}
+                onEditCategory={handleEditCategory}
+                onEditIngredient={conditions.ingredientId ? handleEditIngredient : undefined}
+                onEditBudget={conditions.budgetId ? handleEditBudget : undefined}
+              />
+            ) : (
+              <SidePanel
+                mode="conditions"
+                category={category}
+                ingredient={ingredient}
+                budget={budget}
+                onEditCategory={handleEditCategory}
+                onEditIngredient={conditions.ingredientId ? handleEditIngredient : undefined}
+                onEditBudget={conditions.budgetId ? handleEditBudget : undefined}
+              />
+            ))}
+
+          {/* 모바일에서는 호버 프리뷰가 없어서, 성분 상세는 카드를 눌러 펼치는 방식으로
+              대체돼요(IngredientCard의 compact 모드) — 그래서 이 패널은 데스크톱에서만 보여줘요. */}
+          {!forceStacked && step === "ingredient" && previewIngredient && (
             <SidePanel mode="detail" ingredient={previewIngredient} />
           )}
-          {step !== "ingredient" && ingredient && <SidePanel mode="detail" ingredient={ingredient} />}
+          {!forceStacked && step !== "ingredient" && ingredient && (
+            <SidePanel mode="detail" ingredient={ingredient} />
+          )}
 
           {showSidePanel && (
             <button
@@ -447,6 +573,8 @@ export default function ChatWindow() {
           onClearAll={handleClearCompare}
         />
       )}
+
+      <ContactModal open={showContactModal} onClose={() => setShowContactModal(false)} />
     </div>
   );
 }
@@ -482,9 +610,11 @@ function MessageBubble({
   onIngredientPreview,
   compareIds,
   onToggleCompare,
+  forceStacked,
   onCategoryChip,
   onIngredientSelect,
   onBudgetChip,
+  disabled,
 }: {
   message: ChatMessage;
   showChips: boolean;
@@ -492,9 +622,11 @@ function MessageBubble({
   onIngredientPreview: (id: string | null) => void;
   compareIds: string[];
   onToggleCompare: (product: ScoredProduct, ingredientName: string, categoryLabel: string) => void;
+  forceStacked: boolean;
   onCategoryChip: (categoryKey: CategoryKey) => void;
   onIngredientSelect: (categoryKey: CategoryKey, ingredientId: string, ingredientName: string) => void;
   onBudgetChip: (budgetId: string) => void;
+  disabled: boolean;
 }) {
   if (message.role === "user") {
     return (
@@ -536,7 +668,8 @@ function MessageBubble({
                 key={c.key}
                 type="button"
                 onClick={() => onCategoryChip(c.key)}
-                className="rounded-full border border-[var(--color-border)] px-3 py-1.5 text-[11.5px] text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+                disabled={disabled}
+                className="rounded-full border border-[var(--color-border)] px-3 py-1.5 text-[11.5px] text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors disabled:opacity-40"
               >
                 {c.label}
               </button>
@@ -549,43 +682,33 @@ function MessageBubble({
 
   if (message.kind === "ingredients") {
     const category = getCategory(message.categoryKey);
-    const previewBelongsHere = category.ingredients.some((i) => i.id === previewIngredientId);
+    // 서버가 안전 조정한 실제 목록을 우선 쓰고, 없으면(옛날 대화 기록 등) 정적 데이터로 폴백해요.
+    const ingredientList = message.ingredients ?? category.ingredients;
+    const previewBelongsHere = ingredientList.some((i) => i.id === previewIngredientId);
     const activeId = previewBelongsHere
       ? previewIngredientId
-      : category.ingredients.find((i) => i.recommended)?.id ?? category.ingredients[0]?.id;
+      : ingredientList.find((i) => i.recommended)?.id ?? ingredientList[0]?.id;
     return (
       <div className="flex items-start gap-2.5 animate-fade-up">
         <AiAvatar />
         <div className="max-w-[85%] space-y-2.5">
           <div className="rounded-2xl rounded-tl-sm bg-[var(--color-primary-soft)] px-4 py-3">
-            <div className="flex items-center gap-2">
-              <p className="text-[13.5px] font-medium text-[var(--color-ink)]">{category.intro}</p>
-              {message.usedAi === true && (
-                <span
-                  title="Google Gemini가 이 문장을 분석했어요"
-                  className="shrink-0 rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-[9.5px] font-semibold text-white"
-                >
-                  ✨ Gemini
-                </span>
-              )}
-              {message.usedAi === false && (
-                <span
-                  title="OPENAI_API_KEY가 없거나 호출에 실패해 키워드 매칭으로 분석했어요"
-                  className="shrink-0 rounded-full bg-gray-200 px-2 py-0.5 text-[9.5px] font-semibold text-[var(--color-ink-soft)]"
-                >
-                  🔤 키워드 매칭
-                </span>
-              )}
-            </div>
+            <p className="text-[13.5px] font-medium text-[var(--color-ink)]">{message.intro || category.intro}</p>
           </div>
+          {message.safetyNotice && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-3 text-[12px] leading-relaxed text-amber-900">
+              {message.safetyNotice}
+            </div>
+          )}
           <div className="space-y-2">
-            {category.ingredients.map((ingredient) => (
+            {ingredientList.map((ingredient) => (
               <IngredientCard
                 key={ingredient.id}
                 ingredient={ingredient}
                 selected={ingredient.id === activeId}
                 onPreview={() => onIngredientPreview(ingredient.id)}
                 onSelect={() => onIngredientSelect(category.key, ingredient.id, ingredient.name)}
+                compact={forceStacked}
               />
             ))}
           </div>
@@ -611,7 +734,8 @@ function MessageBubble({
                 key={b.id}
                 type="button"
                 onClick={() => onBudgetChip(b.id)}
-                className="rounded-full border border-[var(--color-border)] px-3 py-1.5 text-[11.5px] text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+                disabled={disabled}
+                className="rounded-full border border-[var(--color-border)] px-3 py-1.5 text-[11.5px] text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors disabled:opacity-40"
               >
                 {b.label}
               </button>
@@ -643,6 +767,13 @@ function MessageBubble({
           <div className="rounded-xl border border-[var(--color-border)] bg-white px-4 py-4 text-[12.5px] text-[var(--color-ink-soft)]">
             아쉽게도 이 예산 범위에는 조건에 맞는 제품이 없어요. 다른 예산을 선택해 보시겠어요?
           </div>
+        ) : forceStacked ? (
+          <ResultCarousel
+            results={message.results}
+            ingredient={ingredient}
+            compareIds={compareIds}
+            onToggleCompare={(product) => onToggleCompare(product, ingredient.name, category.label)}
+          />
         ) : (
           <div className="grid gap-2.5 sm:grid-cols-2">
             {message.results.map((product, idx) => (

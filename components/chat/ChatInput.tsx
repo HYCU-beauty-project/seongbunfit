@@ -1,5 +1,7 @@
 "use client";
 
+import ArrowRightIcon from "@/components/ArrowRightIcon";
+
 interface Props {
   value: string;
   onChange: (value: string) => void;
@@ -36,7 +38,7 @@ export default function ChatInput({
         className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-[13px] font-medium text-white hover:bg-[var(--color-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         전송
-        <span aria-hidden>→</span>
+        <ArrowRightIcon />
       </button>
     </form>
   );
