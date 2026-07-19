@@ -88,7 +88,7 @@ export default function ResultCard({
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                        <span className="inline-block rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-primary)]">
+                        <span className="inline-block shrink-0 whitespace-nowrap rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-primary)]">
                             {rankLabel[rank] ?? `${rank}위`}
                         </span>
                         {onToggleFavorite && (

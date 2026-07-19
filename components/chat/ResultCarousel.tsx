@@ -76,7 +76,14 @@ export default function ResultCarousel({
         setActiveIndex(Math.max(0, Math.min(maxIndex, closestIdx)));
     }
 
-    const cardBasisClass = cardsPerView === 2 ? 'basis-[calc(50%-5px)]' : 'basis-full';
+    // ⚠️ cardsPerView 비율만큼 폭을 주는 걸 Tailwind의 basis-*(flex-basis: %)로
+    // 했었는데, 이게 overflow-x:auto인 가로 스크롤 flex 컨테이너 안에서는 사파리(iOS)가
+    // 퍼센트 flex-basis를 컨테이너 폭이 아니라 내용물 크기 기준으로 잘못 계산하는 버그가
+    // 있어요. 크롬 데스크톱 기기 시뮬레이터는 이 버그가 재현되지 않아 카드 폭이
+    // 멀쩡해 보였지만, 실제 아이폰에서는 카드가 실제 필요한 폭보다 훨씬 좁게 찌그러져서
+    // 세로로 길고 내용이 몰려 보였어요. flex-basis 대신 width(%)를 직접 지정하면 이
+    // 버그를 피할 수 있어요.
+    const cardWidthClass = cardsPerView === 2 ? 'w-[calc(50%-5px)]' : 'w-full';
 
     return (
         <div>
@@ -104,7 +111,7 @@ export default function ResultCarousel({
                             ref={(el) => {
                                 cardRefs.current[idx] = el;
                             }}
-                            className={`min-w-0 shrink-0 snap-start ${cardBasisClass}`}>
+                            className={`min-w-0 shrink-0 snap-start ${cardWidthClass}`}>
                             <ResultCard
                                 rank={idx + 1}
                                 product={product}
