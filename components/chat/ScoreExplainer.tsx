@@ -3,6 +3,7 @@
 import { getIngredientInCategory, getAllUniqueIngredients } from "@/lib/ingredients";
 import { getBudget } from "@/lib/budgets";
 import { SCORE_WEIGHTS } from "@/lib/scoring/calculator";
+import ScoreBar from "@/components/ScoreBar";
 import type { AiResultMessage } from "@/types";
 
 interface Props {
@@ -73,21 +74,39 @@ export default function ScoreExplainer({ open, onClose, latestResult }: Props) {
             <div className="mt-2.5 space-y-2.5">
               {latestResult!.results.map((product, idx) => (
                 <div key={product.id} className="rounded-lg border border-[var(--color-border)] p-3">
-                  <p className="text-[12.5px] font-semibold text-[var(--color-ink)]">
-                    {idx + 1}위 · {product.brand} {product.name}
-                  </p>
-                  <div className="mt-1.5 grid grid-cols-3 gap-2 text-center">
-                    <ScoreCell
-                      label={`배치 (${product.actualPosition}/${ingredient!.refPosition}번)`}
+                  <div className="flex items-center justify-between">
+                    <p className="text-[12.5px] font-semibold text-[var(--color-ink)]">
+                      {idx + 1}위 · {product.brand} {product.name}
+                    </p>
+                    <p className="flex items-center gap-1 text-[12px] font-semibold text-[var(--color-accent-text)]">
+                      <SparkleIcon />
+                      {product.finalScore}
+                    </p>
+                  </div>
+                  <div className="mt-2.5 space-y-2">
+                    <ScoreBar
+                      label={`전성분 배치 (${product.actualPosition}/${ingredient!.refPosition}번)`}
                       value={product.placementScore}
+                      color="var(--color-primary)"
+                      delay={idx * 90}
+                      size="sm"
                     />
-                    <ScoreCell
+                    <ScoreBar
                       label={`ml당 ${Math.round(product.price / product.volumeMl).toLocaleString()}원`}
                       value={product.priceScore}
+                      color="var(--color-accent-deep)"
+                      delay={idx * 90 + 60}
+                      size="sm"
                     />
-                    <ScoreCell label="예산 여유" value={product.budgetScore} />
+                    <ScoreBar
+                      label="예산 여유"
+                      value={product.budgetScore}
+                      color="#c9a86a"
+                      delay={idx * 90 + 120}
+                      size="sm"
+                    />
                   </div>
-                  <p className="mt-2 text-center text-[11.5px] text-[var(--color-ink-soft)]">
+                  <p className="mt-2 text-center text-[11px] text-[var(--color-ink-faint)]">
                     {product.placementScore} × {SCORE_WEIGHTS.placement} + {product.priceScore} ×{" "}
                     {SCORE_WEIGHTS.price} + {product.budgetScore} × {SCORE_WEIGHTS.budget} ={" "}
                     <span className="font-semibold text-[var(--color-accent-text)]">
@@ -152,11 +171,10 @@ function FactorRow({ title, desc }: { title: string; desc: string }) {
   );
 }
 
-function ScoreCell({ label, value }: { label: string; value: number }) {
+function SparkleIcon() {
   return (
-    <div className="rounded-md bg-gray-50 px-1.5 py-2">
-      <p className="text-[10px] text-[var(--color-ink-faint)] leading-tight">{label}</p>
-      <p className="mt-0.5 text-[13px] font-semibold text-[var(--color-ink)]">{value}점</p>
-    </div>
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden className="shrink-0">
+      <path d="M12 2.5c.9 4 2.2 6.3 4.5 7.5-2.3 1.2-3.6 3.5-4.5 7.5-.9-4-2.2-6.3-4.5-7.5 2.3-1.2 3.6-3.5 4.5-7.5Z" />
+    </svg>
   );
 }

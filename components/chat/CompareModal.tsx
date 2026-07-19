@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { CompareItem } from "@/types";
+import ScoreBar from "@/components/ScoreBar";
 
 interface Props {
   open: boolean;
@@ -89,13 +90,13 @@ export default function CompareModal({ open, items, onClose, onRemove, onClearAl
             </p>
           ) : (
             <div ref={captureRef} className="flex gap-3 bg-white">
-              {items.map((item) => {
+              {items.map((item, idx) => {
                 const p = item.product;
                 const pricePerMl = Math.round(p.price / p.volumeMl);
                 return (
                   <div
                     key={item.id}
-                    className="w-[180px] shrink-0 rounded-xl border border-[var(--color-border)] p-3"
+                    className="w-[190px] shrink-0 rounded-xl border border-[var(--color-border)] p-3"
                   >
                     <div className="flex items-start justify-between gap-1">
                       <span className="rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[9.5px] font-medium text-[var(--color-primary)]">
@@ -124,15 +125,39 @@ export default function CompareModal({ open, items, onClose, onRemove, onClearAl
                       <Row label="가격" value={`${p.price.toLocaleString()}원`} />
                       <Row label="용량" value={`${p.volumeMl}ml`} />
                       <Row label="ml당 가격" value={`${pricePerMl.toLocaleString()}원`} />
-                      <Row label="배치 점수" value={`${p.placementScore}점`} />
-                      <Row label="가격 점수" value={`${p.priceScore}점`} />
-                      <Row label="예산 점수" value={`${p.budgetScore}점`} />
-                      <Row
-                        label="가성비 지수"
-                        value={String(p.finalScore)}
-                        strong
-                      />
                     </dl>
+
+                    <div className="mt-2.5 space-y-1.5 border-t border-[var(--color-border)] pt-2.5">
+                      <ScoreBar
+                        label="배치 점수"
+                        value={p.placementScore}
+                        color="var(--color-primary)"
+                        delay={idx * 70}
+                        size="sm"
+                      />
+                      <ScoreBar
+                        label="가격 점수"
+                        value={p.priceScore}
+                        color="var(--color-accent-deep)"
+                        delay={idx * 70 + 50}
+                        size="sm"
+                      />
+                      <ScoreBar
+                        label="예산 점수"
+                        value={p.budgetScore}
+                        color="#c9a86a"
+                        delay={idx * 70 + 100}
+                        size="sm"
+                      />
+                      <ScoreBar
+                        label="가성비 지수"
+                        value={p.finalScore}
+                        color="var(--color-accent-text)"
+                        delay={idx * 70 + 150}
+                        size="sm"
+                      />
+                    </div>
+
                     <a
                       href={p.purchaseUrl}
                       target="_blank"
