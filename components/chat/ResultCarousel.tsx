@@ -87,24 +87,15 @@ export default function ResultCarousel({
 
     return (
         <div>
-            {/* 화살표를 카드 위에 겹쳐 올리지 않고, 별도 좌우 칸으로 분리해서
-          카드 안쪽 버튼(비교함/구매하러 가기)과 안 붙어 보이게 했어요. */}
-            <div className="flex items-center gap-2">
-                {needsScroll && (
-                    <button
-                        type="button"
-                        onClick={() => scrollToIndex(activeIndex - 1)}
-                        disabled={activeIndex === 0}
-                        aria-label="이전 결과"
-                        className="flex h-11 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[var(--color-ink-soft)] shadow-md border border-[var(--color-border)] disabled:invisible transition-opacity">
-                        <ChevronIcon direction="left" />
-                    </button>
-                )}
-
+            {/* 화살표를 좌우 전용 칸으로 따로 뒀더니, 그 칸들이 차지하는 폭(왼쪽 화살표는
+          안 보일 때도 자리는 차지)만큼 카드가 좁아져 보였어요. 화살표를 트랙 위에
+          살짝 겹치는 오버레이로 바꿔서 그 폭을 카드에 돌려줬어요 — 화살표는 카드
+          중간 높이(점수 요약 박스 근처)에 떠서 아래쪽 버튼들과는 안 겹쳐요. */}
+            <div className="relative">
                 <div
                     ref={trackRef}
                     onScroll={handleScroll}
-                    className="no-scrollbar flex min-w-0 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-smooth">
+                    className="no-scrollbar flex min-w-0 snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-smooth">
                     {results.map((product, idx) => (
                         <div
                             key={product.id}
@@ -134,10 +125,21 @@ export default function ResultCarousel({
                 {needsScroll && (
                     <button
                         type="button"
+                        onClick={() => scrollToIndex(activeIndex - 1)}
+                        disabled={activeIndex === 0}
+                        aria-label="이전 결과"
+                        className="absolute left-1 top-[38%] flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[var(--color-ink-soft)] shadow-md border border-[var(--color-border)] disabled:invisible transition-opacity">
+                        <ChevronIcon direction="left" />
+                    </button>
+                )}
+
+                {needsScroll && (
+                    <button
+                        type="button"
                         onClick={() => scrollToIndex(activeIndex + 1)}
                         disabled={activeIndex >= maxIndex}
                         aria-label="다음 결과"
-                        className="flex h-11 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[var(--color-ink-soft)] shadow-md border border-[var(--color-border)] disabled:invisible transition-opacity">
+                        className="absolute right-1 top-[38%] flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[var(--color-ink-soft)] shadow-md border border-[var(--color-border)] disabled:invisible transition-opacity">
                         <ChevronIcon direction="right" />
                     </button>
                 )}

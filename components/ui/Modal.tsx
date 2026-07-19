@@ -23,7 +23,7 @@ export default function Modal({ open, onAgree, onBack }: Props) {
   if (!open) return null;
 
   return (
-    <div className="min-h-[calc(100vh-65px)] flex items-center justify-center px-4 py-16">
+    <div className="min-h-[calc(100vh-65px)] flex items-start justify-center px-4 pt-14 pb-16">
       <div className="animate-fade-up w-full max-w-md rounded-2xl bg-white shadow-sm p-7">
         <h2 className="text-[17px] font-semibold text-[var(--color-ink)]">
           서비스 이용 전 아래 내용을 확인해 주세요

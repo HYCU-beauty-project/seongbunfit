@@ -135,12 +135,12 @@ export default function ResultCard({
                                 {ingredient.name}
                             </span>
                         </span>
-                        <span className="mt-1.5 flex items-center justify-between">
-                            <span className="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--color-accent-text)]">
+                        <span className="mt-1.5 flex items-center justify-between gap-2">
+                            <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[12.5px] font-semibold text-[var(--color-accent-text)]">
                                 <SparkleIcon />
                                 가성비 {product.finalScore}점
                             </span>
-                            <span className="flex items-center gap-0.5 text-[10.5px] font-medium text-[var(--color-primary)]">
+                            <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[10.5px] font-medium text-[var(--color-primary)]">
                                 상세보기
                                 <ChevronDownIcon />
                             </span>
@@ -201,20 +201,20 @@ export default function ResultCard({
                     <button
                         type="button"
                         onClick={onToggleCompare}
-                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11.5px] font-medium transition-colors ${
+                        className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg py-1.5 text-[11.5px] font-medium transition-colors ${
                             isInCompare
                                 ? 'bg-[var(--color-primary)] text-white'
                                 : 'border border-[var(--color-border)] text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]'
                         }`}>
                         <span aria-hidden>{isInCompare ? '✓' : '+'}</span>
-                        {isInCompare ? '비교함에 담김' : '비교함에 담기'}
+                        {isInCompare ? '비교함에 담김' : '비교함 담기'}
                     </button>
                 )}
                 <button
                     type="button"
                     onClick={handleShare}
                     disabled={isExporting}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--color-border)] py-1.5 text-[11.5px] font-medium text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors disabled:opacity-50">
+                    className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-[var(--color-border)] py-1.5 text-[11.5px] font-medium text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors disabled:opacity-50">
                     <span aria-hidden>⤓</span>
                     {isExporting ? '저장 중…' : '이미지 저장'}
                 </button>
