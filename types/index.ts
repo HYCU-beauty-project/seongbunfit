@@ -136,3 +136,12 @@ export interface CompareItem {
   categoryLabel: string;
   addedAt: number;
 }
+
+// 즐겨찾기에 담긴 항목 (구조는 비교함과 동일하되, 목적이 달라 별도 타입으로 분리했어요)
+export interface FavoriteItem {
+  id: string; // = product.id (유니크)
+  product: ScoredProduct;
+  ingredientName: string;
+  categoryLabel: string;
+  addedAt: number;
+}
