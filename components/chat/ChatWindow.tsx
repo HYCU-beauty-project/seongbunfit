@@ -487,12 +487,27 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
     const showSidePanel = step !== 'concern';
 
     return (
-        <div className="min-h-[calc(100vh-65px)] bg-[var(--color-primary-soft)] px-4 py-10">
+        <div
+            className={
+                forceStacked
+                    ? // ⚠️ 실제 모바일 브라우저는 주소창 때문에 보이는 화면 높이가 계속 바뀌는데,
+                      // 100vh는 "주소창이 사라졌을 때"의 최댓값으로 고정돼서 처음 켰을 때
+                      // 카드가 화면보다 커져 헤더·입력창을 보려면 스크롤해야 하는 문제가
+                      // 있었어요(크롬 데스크톱 기기 시뮬레이터는 이 문제가 재현되지 않아서
+                      // 거기선 멀쩡해 보였어요). 100dvh(동적 뷰포트 높이)로 바꾸고, 카드도
+                      // 고정 760px 대신 남는 공간을 꽉 채우게(h-full) 해서 모바일 헤더(65px)
+                      // 아래로 헤더·메시지창·입력창이 항상 한 화면 안에 다 들어오게 했어요.
+                      'flex h-[calc(100dvh-65px)] flex-col overflow-hidden bg-[var(--color-primary-soft)] px-3 py-3'
+                    : 'min-h-[calc(100vh-65px)] bg-[var(--color-primary-soft)] px-4 py-10'
+            }>
             <div
-                className={`mx-auto animate-fade-up grid max-w-4xl gap-4 ${
-                    forceStacked ? '' : 'md:grid-cols-[1fr_260px]'
+                className={`mx-auto flex-1 animate-fade-up grid max-w-4xl gap-4 ${
+                    forceStacked ? 'h-full min-h-0' : 'md:grid-cols-[1fr_260px]'
                 }`}>
-                <div className="relative flex h-[760px] flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
+                <div
+                    className={`relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ${
+                        forceStacked ? 'h-full min-h-0' : 'h-[760px]'
+                    }`}>
                     <div ref={headerConditionsRef} className="relative border-b border-[var(--color-border)]">
                         <div className="flex items-center justify-between px-4 py-3">
                             <span className="text-[12.5px] font-semibold text-[var(--color-ink)]">성분핏 AI 상담</span>

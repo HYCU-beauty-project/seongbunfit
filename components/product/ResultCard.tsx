@@ -126,7 +126,7 @@ export default function ResultCard({
                         aria-label="배치·가격·예산 점수와 추천 이유 상세 보기"
                         className="mt-2.5 flex w-full items-center gap-2 rounded-lg bg-[var(--color-primary-soft)]/60 px-3 py-2 text-left transition-colors hover:bg-[var(--color-primary-soft)]">
                         <IngredientTag ingredientId={ingredient.id} size={18} />
-                        <span className="min-w-0 flex-1 text-[12px] font-semibold text-[var(--color-ink)]">
+                        <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-[var(--color-ink)]">
                             {ingredient.name}
                         </span>
                         <span className="flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-[var(--color-accent-text)]">
