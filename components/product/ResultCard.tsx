@@ -63,7 +63,9 @@ export default function ResultCard({
     }
 
     return (
-        <div ref={cardRef} className="flex h-full flex-col rounded-xl border border-[var(--color-border)] bg-white p-4">
+        <div
+            ref={cardRef}
+            className="flex h-full flex-col rounded-xl bg-white p-3.5 shadow-[inset_0_0_0_1.5px_var(--color-border)]">
             <div className="flex items-start gap-3">
                 {/* 더미 제품이라 실사진이 없어서, 파스텔 배경(imageColor) 위에
             공용 세럼 아이콘을 얹은 플레이스홀더를 사용해요.
@@ -105,7 +107,7 @@ export default function ResultCard({
 
             {/* flex-1로 남는 공간을 채워서, 카드마다 추천 이유 길이가 달라도
           아래 버튼들이 항상 같은 위치에 오게 했어요. */}
-            <div className="mt-3 flex-1 rounded-lg bg-[var(--color-primary-soft)]/60 px-3 py-2.5 text-[11.5px] text-[var(--color-ink-soft)] leading-relaxed">
+            <div className="mt-2.5 flex-1 rounded-lg bg-[var(--color-primary-soft)]/60 px-3 py-2 text-[11.5px] text-[var(--color-ink-soft)] leading-relaxed">
                 <div className="flex items-center justify-between gap-1.5">
                     <span className="flex items-center gap-1.5">
                         <IngredientTag ingredientId={ingredient.id} size={18} />
@@ -118,7 +120,7 @@ export default function ResultCard({
                 </div>
 
                 {/* 배치·가격·예산 세 점수를 한눈에 비교할 수 있도록 애니메이션 막대그래프로 보여줘요. */}
-                <div className="mt-2 space-y-1.5">
+                <div className="mt-1.5 space-y-1">
                     <ScoreBar
                         label={`배치 ${product.actualPosition}번째`}
                         value={product.placementScore}
@@ -142,18 +144,18 @@ export default function ResultCard({
                     />
                 </div>
 
-                <p className="mt-2">
+                <p className="mt-1.5">
                     <span className="font-medium text-[var(--color-ink)]">추천 이유 </span>
                     {product.reason || '가성비 조건에 맞는 추천 제품이에요.'}
                 </p>
             </div>
 
-            <div data-export-ignore="true" className="mt-3 flex gap-2">
+            <div data-export-ignore="true" className="mt-2.5 flex gap-2">
                 {onToggleCompare && (
                     <button
                         type="button"
                         onClick={onToggleCompare}
-                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-[11.5px] font-medium transition-colors ${
+                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11.5px] font-medium transition-colors ${
                             isInCompare
                                 ? 'bg-[var(--color-primary)] text-white'
                                 : 'border border-[var(--color-border)] text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]'
@@ -166,7 +168,7 @@ export default function ResultCard({
                     type="button"
                     onClick={handleShare}
                     disabled={isExporting}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--color-border)] py-2 text-[11.5px] font-medium text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors disabled:opacity-50">
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--color-border)] py-1.5 text-[11.5px] font-medium text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors disabled:opacity-50">
                     <span aria-hidden>⤓</span>
                     {isExporting ? '저장 중…' : '이미지 저장'}
                 </button>
@@ -176,7 +178,7 @@ export default function ResultCard({
                 href={product.purchaseUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-[var(--color-primary)] py-2.5 text-[12.5px] font-medium text-white hover:bg-[var(--color-primary-hover)] transition-colors">
+                className="mt-1.5 flex items-center justify-center gap-1.5 rounded-lg bg-[var(--color-primary)] py-2 text-[12.5px] font-medium text-white hover:bg-[var(--color-primary-hover)] transition-colors">
                 구매하러 가기
                 <ArrowRightIcon />
             </a>

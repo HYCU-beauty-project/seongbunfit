@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import ArrowRightIcon from '@/components/ArrowRightIcon';
 
 interface Props {
@@ -8,6 +9,11 @@ interface Props {
     onSubmit: () => void;
     placeholder?: string;
     disabled?: boolean;
+    // 입력창 왼쪽에 붙는 버튼 자리예요(예: 모바일의 "+" 메뉴 버튼).
+    // 입력창 바깥에 절대(absolute)로 띄우면 화면/카드 높이가 바뀔 때마다 위치가
+    // 어긋나는데, 이렇게 입력창과 같은 줄에 두면 항상 입력창 바로 옆에 붙어있어서
+    // 어떤 기기·어떤 대화 길이에서도 위치가 흔들리지 않아요.
+    leading?: ReactNode;
 }
 
 export default function ChatInput({
@@ -16,14 +22,16 @@ export default function ChatInput({
     onSubmit,
     placeholder = '피부 고민을 입력해주세요.',
     disabled,
+    leading,
 }: Props) {
     return (
         <form
-            className="flex items-center gap-2.5 border-t border-[var(--color-border)] px-4 py-3.5"
+            className="flex items-center gap-2 border-t border-[var(--color-border)] px-4 py-3.5"
             onSubmit={(e) => {
                 e.preventDefault();
                 onSubmit();
             }}>
+            {leading}
             <input
                 value={value}
                 onChange={(e) => onChange(e.target.value)}

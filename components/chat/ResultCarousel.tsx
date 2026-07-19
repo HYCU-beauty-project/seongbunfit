@@ -17,8 +17,6 @@ interface Props {
     cardsPerView?: 1 | 2;
 }
 
-const GAP_PX = 10; // gap-2.5 = 10px
-
 export default function ResultCarousel({
     results,
     ingredient,
@@ -29,6 +27,11 @@ export default function ResultCarousel({
     cardsPerView = 1,
 }: Props) {
     const trackRef = useRef<HTMLDivElement>(null);
+    // ⚠️ 예전에는 "카드 너비 × 인덱스"로 스크롤 위치를 계산했는데, 렌더링 타이밍에
+    // 따라 clientWidth가 아주 살짝 어긋나서 마지막 카드 오른쪽 테두리가 미세하게
+    // 잘려 보이는 문제가 있었어요. 그래서 각 카드 DOM의 실제 위치를 직접 측정해서
+    // 스크롤하는 방식으로 바꿨어요 — 계산에 의존하지 않으니 오차가 안 생겨요.
+    const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
     const [activeIndex, setActiveIndex] = useState(0);
 
     // 카드 개수가 한 화면에 다 들어가면(cardsPerView 이하) 화살표/점 없이 그냥
@@ -36,28 +39,38 @@ export default function ResultCarousel({
     const needsScroll = results.length > cardsPerView;
     const maxIndex = Math.max(0, results.length - cardsPerView);
 
-    function getStepWidth() {
-        const track = trackRef.current;
-        if (!track) return 0;
-        // 카드 1개 + gap 만큼을 한 스텝으로 스크롤해요. 그래야 2개 보기 모드에서도
-        // 한 번에 카드 1개씩만 밀려나면서 다음 카드가 자연스럽게 "슬라이드"돼요.
-        return (track.clientWidth - GAP_PX * (cardsPerView - 1)) / cardsPerView + GAP_PX;
-    }
-
     function scrollToIndex(idx: number) {
         const track = trackRef.current;
-        if (!track) return;
         const clamped = Math.max(0, Math.min(maxIndex, idx));
-        track.scrollTo({ left: clamped * getStepWidth(), behavior: 'smooth' });
+        const card = cardRefs.current[clamped];
+        if (!track || !card) return;
+
+        const trackRect = track.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        const targetLeft = track.scrollLeft + (cardRect.left - trackRect.left);
+
+        track.scrollTo({ left: targetLeft, behavior: 'smooth' });
         setActiveIndex(clamped);
     }
 
     function handleScroll() {
         const track = trackRef.current;
-        const stepWidth = getStepWidth();
-        if (!track || stepWidth === 0) return;
-        const idx = Math.round(track.scrollLeft / stepWidth);
-        setActiveIndex(Math.max(0, Math.min(maxIndex, idx)));
+        if (!track) return;
+
+        // 지금 스크롤 위치에서 트랙의 왼쪽 경계에 가장 가까운 카드를 찾아서
+        // 그 카드를 "현재 보고 있는 카드"로 표시해요(점 인디케이터용).
+        const trackRect = track.getBoundingClientRect();
+        let closestIdx = 0;
+        let closestDist = Infinity;
+        cardRefs.current.forEach((card, idx) => {
+            if (!card) return;
+            const dist = Math.abs(card.getBoundingClientRect().left - trackRect.left);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closestIdx = idx;
+            }
+        });
+        setActiveIndex(Math.max(0, Math.min(maxIndex, closestIdx)));
     }
 
     const cardBasisClass = cardsPerView === 2 ? 'basis-[calc(50%-5px)]' : 'basis-full';
@@ -73,7 +86,7 @@ export default function ResultCarousel({
                         onClick={() => scrollToIndex(activeIndex - 1)}
                         disabled={activeIndex === 0}
                         aria-label="이전 결과"
-                        className="flex h-11 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[var(--color-ink-soft)] shadow-md border border-[var(--color-border)] disabled:opacity-30 transition-opacity">
+                        className="flex h-11 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[var(--color-ink-soft)] shadow-md border border-[var(--color-border)] disabled:invisible transition-opacity">
                         <ChevronIcon direction="left" />
                     </button>
                 )}
@@ -83,7 +96,12 @@ export default function ResultCarousel({
                     onScroll={handleScroll}
                     className="no-scrollbar flex min-w-0 flex-1 snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-smooth">
                     {results.map((product, idx) => (
-                        <div key={product.id} className={`min-w-0 shrink-0 snap-start ${cardBasisClass}`}>
+                        <div
+                            key={product.id}
+                            ref={(el) => {
+                                cardRefs.current[idx] = el;
+                            }}
+                            className={`min-w-0 shrink-0 snap-start ${cardBasisClass}`}>
                             <ResultCard
                                 rank={idx + 1}
                                 product={product}
@@ -95,6 +113,11 @@ export default function ResultCarousel({
                             />
                         </div>
                     ))}
+                    {/* 마지막 카드가 스크롤 가능 영역의 오른쪽 경계에 정확히 맞닿으면,
+                        둥근 모서리(rounded-xl)가 서브픽셀 단위로 잘려서 흐릿하게 보이는
+                        경우가 있어요. 스크롤 끝에 약간의 여백을 둬서 그 경계에서 살짝
+                        떨어지게 했어요. */}
+                    <div className="w-2 shrink-0" aria-hidden />
                 </div>
 
                 {needsScroll && (
@@ -103,7 +126,7 @@ export default function ResultCarousel({
                         onClick={() => scrollToIndex(activeIndex + 1)}
                         disabled={activeIndex >= maxIndex}
                         aria-label="다음 결과"
-                        className="flex h-11 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[var(--color-ink-soft)] shadow-md border border-[var(--color-border)] disabled:opacity-30 transition-opacity">
+                        className="flex h-11 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[var(--color-ink-soft)] shadow-md border border-[var(--color-border)] disabled:invisible transition-opacity">
                         <ChevronIcon direction="right" />
                     </button>
                 )}

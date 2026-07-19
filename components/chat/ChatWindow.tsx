@@ -478,7 +478,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                     forceStacked ? '' : 'md:grid-cols-[1fr_260px]'
                 }`}>
                 <div className="relative flex h-[760px] flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
-                    <div className="border-b border-[var(--color-border)] px-4 py-3">
+                    <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
                         <span className="text-[12.5px] font-semibold text-[var(--color-ink)]">성분핏 AI 상담</span>
                     </div>
 
@@ -514,22 +514,23 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                         )}
                     </div>
 
-                    {forceStacked && (
-                        <MobileActionFabs
-                            compareCount={compareHydrated ? compareItems.length : 0}
-                            favoriteCount={favoriteHydrated ? favoriteItems.length : 0}
-                            onOpenCalc={() => setShowScoreExplainer(true)}
-                            onOpenCompare={() => setShowCompareModal(true)}
-                            onOpenFavorites={() => setShowFavoritesModal(true)}
-                            onOpenContact={() => setShowContactModal(true)}
-                        />
-                    )}
-
                     <ChatInput
                         value={draft}
                         onChange={setDraft}
                         onSubmit={handleSubmit}
                         disabled={isTyping}
+                        leading={
+                            forceStacked ? (
+                                <MobileActionFabs
+                                    compareCount={compareHydrated ? compareItems.length : 0}
+                                    favoriteCount={favoriteHydrated ? favoriteItems.length : 0}
+                                    onOpenCalc={() => setShowScoreExplainer(true)}
+                                    onOpenCompare={() => setShowCompareModal(true)}
+                                    onOpenFavorites={() => setShowFavoritesModal(true)}
+                                    onOpenContact={() => setShowContactModal(true)}
+                                />
+                            ) : undefined
+                        }
                         placeholder={
                             step === 'concern'
                                 ? '피부 고민을 입력해주세요.'
@@ -833,8 +834,10 @@ function MessageBubble({
                     </div>
                 ) : (
                     // 결과가 3개일 때 2열 그리드로 두면 3번째 카드가 아래로 떨어져서 세로로 길어져요.
-                    // 대신 캐러셀로 통일해서, 데스크톱(넓은 채팅창)에선 2개씩 보이다가 슬라이드하면
-                    // 3번째가 나오는 방식으로, 모바일(forceStacked)에선 기존처럼 1개씩 풀와이드로 보여줘요.
+                    // 그래서 캐러셀로 통일했어요. 처음엔 데스크톱만 2개씩 보여줬는데, 카드 폭이
+                    // 좁아지니 "추천 이유" 문단이 더 많이 줄바꿈되면서 카드가 오히려 세로로
+                    // 길어지는 역효과가 있었어요. 그래서 모바일/데스크톱 구분 없이 카드 1개씩
+                    // 꽉 채운 폭으로 보여주고 옆으로 넘기는 방식으로 통일했어요.
                     <ResultCarousel
                         results={message.results}
                         ingredient={ingredient}
@@ -842,7 +845,7 @@ function MessageBubble({
                         onToggleCompare={(product) => onToggleCompare(product, ingredient.name, category.label)}
                         favoriteIds={favoriteIds}
                         onToggleFavorite={(product) => onToggleFavorite(product, ingredient.name, category.label)}
-                        cardsPerView={forceStacked ? 1 : 2}
+                        cardsPerView={1}
                     />
                 )}
             </div>
