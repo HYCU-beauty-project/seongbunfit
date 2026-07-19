@@ -477,12 +477,19 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                 className={`mx-auto animate-fade-up grid max-w-4xl gap-4 ${
                     forceStacked ? '' : 'md:grid-cols-[1fr_260px]'
                 }`}>
-                <div className="relative flex h-[760px] flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
+                <div
+                    className={`relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ${
+                        forceStacked ? 'h-[calc(100dvh-96px)]' : 'h-[760px]'
+                    }`}>
                     <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
                         <span className="text-[12.5px] font-semibold text-[var(--color-ink)]">성분핏 AI 상담</span>
                     </div>
 
-                    <div ref={scrollRef} className="chat-scroll flex-1 overflow-y-auto px-6 py-6 space-y-4">
+                    <div
+                        ref={scrollRef}
+                        className={`chat-scroll flex-1 overflow-y-auto py-6 space-y-4 ${
+                            forceStacked ? 'px-3' : 'px-6'
+                        }`}>
                         {!hydrated ? null : (
                             <>
                                 {messages.map((message) => (
@@ -748,7 +755,7 @@ function MessageBubble({
         return (
             <div className="flex items-start gap-2.5 animate-fade-up">
                 <AiAvatar />
-                <div className="max-w-[85%] space-y-2.5">
+                <div className={forceStacked ? 'max-w-[92%] space-y-2.5' : 'max-w-[85%] space-y-2.5'}>
                     <div className="rounded-2xl rounded-tl-sm bg-[var(--color-primary-soft)] px-4 py-3">
                         <p className="text-[13.5px] font-medium text-[var(--color-ink)]">
                             {message.intro || category.intro}
@@ -780,7 +787,7 @@ function MessageBubble({
         return (
             <div className="flex items-start gap-2.5 animate-fade-up">
                 <AiAvatar />
-                <div className="max-w-[85%] space-y-2.5">
+                <div className={forceStacked ? 'max-w-[92%] space-y-2.5' : 'max-w-[85%] space-y-2.5'}>
                     <div className="rounded-2xl rounded-tl-sm bg-[var(--color-primary-soft)] px-4 py-3">
                         <p className="text-[13.5px] font-medium text-[var(--color-ink)]">
                             좋아요! {message.ingredientName}이 상위에 배치된 세럼을 찾아드릴게요. 예산은 어느 정도
@@ -812,7 +819,7 @@ function MessageBubble({
     return (
         <div className="flex items-start gap-2.5 animate-fade-up">
             <AiAvatar />
-            <div className="max-w-[90%] space-y-3.5">
+            <div className={forceStacked ? 'max-w-full space-y-3.5' : 'max-w-[90%] space-y-3.5'}>
                 <div className="rounded-2xl rounded-tl-sm bg-[var(--color-primary-soft)] px-4 py-3">
                     <p className="text-[13.5px] font-medium text-[var(--color-ink)]">
                         선택하신 성분과 예산을 기준으로 TOP{message.results.length} 세럼을 추천드려요.
