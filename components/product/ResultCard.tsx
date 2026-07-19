@@ -48,24 +48,9 @@ export default function ResultCard({
             });
             const fileName = `성분핏-${product.brand}-${product.name}.png`;
 
-            const nav = navigator as Navigator & {
-                canShare?: (data?: { files?: File[] }) => boolean;
-                share?: (data: { files?: File[]; title?: string; text?: string }) => Promise<void>;
-            };
-
-            if (nav.canShare && nav.share) {
-                const blob = await (await fetch(dataUrl)).blob();
-                const file = new File([blob], fileName, { type: 'image/png' });
-                if (nav.canShare({ files: [file] })) {
-                    await nav.share({
-                        files: [file],
-                        title: `${product.brand} ${product.name}`,
-                        text: '성분핏 추천 결과',
-                    });
-                    return;
-                }
-            }
-
+            // ⚠️ "이미지 저장" 버튼은 이름 그대로 바로 다운로드만 해요.
+            // (OS 공유창을 띄우는 navigator.share()는 CompareModal의
+            // "저장/공유" 버튼에서만 써요 — 그쪽은 문구가 공유까지 약속하니까요.)
             const link = document.createElement('a');
             link.href = dataUrl;
             link.download = fileName;
