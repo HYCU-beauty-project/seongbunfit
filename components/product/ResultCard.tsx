@@ -138,7 +138,13 @@ export default function ResultCard({
                         <span className="mt-1.5 flex items-center justify-between gap-2">
                             <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[12.5px] font-semibold text-[var(--color-accent-text)]">
                                 <SparkleIcon />
-                                가성비 {product.finalScore}점
+                                {/* ⚠️ CSS의 white-space:nowrap이 일부 기기(브라우저 접근성 설정,
+                            데이터 절약 모드 등)에서 무시되는 경우가 있어서, "가성비"와
+                            점수 사이의 일반 공백을 줄바꿈이 아예 불가능한 줄바꿈 방지
+                            공백(U+00A0)으로 바꿨어요. 이건 CSS가 아니라 글자 자체의
+                            성질이라 어떤 환경에서도 그 지점에서 줄이 안 끊겨요. */}
+                                가성비{'\u00A0'}
+                                {product.finalScore}점
                             </span>
                             <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[10.5px] font-medium text-[var(--color-primary)]">
                                 상세보기
@@ -207,7 +213,7 @@ export default function ResultCard({
                                 : 'border border-[var(--color-border)] text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]'
                         }`}>
                         <span aria-hidden>{isInCompare ? '✓' : '+'}</span>
-                        {isInCompare ? '비교함에 담김' : '비교함 담기'}
+                        {isInCompare ? `비교함에\u00A0담김` : `비교함\u00A0담기`}
                     </button>
                 )}
                 <button
@@ -216,7 +222,7 @@ export default function ResultCard({
                     disabled={isExporting}
                     className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-[var(--color-border)] py-1.5 text-[11.5px] font-medium text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors disabled:opacity-50">
                     <span aria-hidden>⤓</span>
-                    {isExporting ? '저장 중…' : '이미지 저장'}
+                    {isExporting ? '저장 중…' : `이미지\u00A0저장`}
                 </button>
             </div>
 
