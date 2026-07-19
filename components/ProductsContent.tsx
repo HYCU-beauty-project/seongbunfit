@@ -9,6 +9,7 @@ import ProductDetailModal from '@/components/product/ProductDetailModal';
 import ArrowRightIcon from '@/components/ArrowRightIcon';
 import RequestProductModal from '@/components/RequestProductModal';
 import IngredientTag from '@/components/IngredientTag';
+import { getIngredientColor } from '@/lib/ingredientVisual';
 
 const PAGE_SIZE = 12; // 3열 x 4행 (모바일에선 1열 x 12행)
 
@@ -234,27 +235,22 @@ export default function ProductsContent({ compact = false, products }: Props) {
                             const ingredient = getIngredient(p.ingredientId);
                             const pricePerMl = Math.round(p.price / p.volumeMl);
                             const isBestValue = bestValueIds.has(p.id);
+                            const accentColor = getIngredientColor(p.ingredientId);
                             return (
                                 <button
                                     key={p.id}
                                     type="button"
                                     onClick={() => setSelectedProduct(p)}
-                                    className={`relative rounded-xl border p-4 text-left transition-colors ${
-                                        isBestValue
-                                            ? 'border-[var(--color-primary)]/40 bg-[var(--color-primary-soft)]/30 hover:border-[var(--color-primary)]'
-                                            : 'border-[var(--color-border)] hover:border-[var(--color-primary)]'
-                                    }`}>
-                                    {isBestValue && (
-                                        <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-[var(--color-accent-soft)] px-2.5 py-0.5 text-[10px] font-semibold text-[var(--color-accent-text)] shadow-sm">
-                                            <SparkleIcon />
-                                            성분핏 추천템
-                                        </span>
-                                    )}
+                                    className="rounded-xl border p-4 text-left shadow-none transition-shadow hover:shadow-md"
+                                    style={{
+                                        borderColor: `${accentColor}40`,
+                                        backgroundColor: `${accentColor}0d`,
+                                    }}>
                                     <div className="flex items-start gap-3">
                                         {/* 더미 제품이라 실사진이 없어서, 파스텔 배경(imageColor) 위에
                         공용 세럼 아이콘을 얹은 플레이스홀더를 사용해요. */}
                                         <div
-                                            className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg"
+                                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg"
                                             style={{ backgroundColor: p.imageColor }}
                                             aria-hidden>
                                             <Image
@@ -275,12 +271,23 @@ export default function ProductsContent({ compact = false, products }: Props) {
                                             </p>
                                         </div>
                                     </div>
-                                    {ingredient && (
-                                        <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--color-primary-soft)] py-1 pl-1 pr-2.5 text-[11px] font-medium text-[var(--color-primary)]">
-                                            <IngredientTag ingredientId={ingredient.id} size={18} />
-                                            {ingredient.name}
-                                        </span>
-                                    )}
+                                    {/* 성분 태그랑 같은 줄, 같은 스타일(둥근 배경 필)로 나란히 둬서
+                    시각적으로 통일감 있게 했어요. 태그 행은 이름 줄과 별개라
+                    배지가 있어도 카드 높이는 전혀 달라지지 않아요. */}
+                                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                                        {ingredient && (
+                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-primary-soft)] py-1 pl-1 pr-2.5 text-[11px] font-medium text-[var(--color-primary)]">
+                                                <IngredientTag ingredientId={ingredient.id} size={18} />
+                                                {ingredient.name}
+                                            </span>
+                                        )}
+                                        {isBestValue && (
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent-soft)] px-2.5 py-1 text-[11px] font-medium text-[var(--color-accent-text)]">
+                                                <SparkleIcon />
+                                                성분핏 추천
+                                            </span>
+                                        )}
+                                    </div>
                                 </button>
                             );
                         })}
@@ -335,7 +342,11 @@ export default function ProductsContent({ compact = false, products }: Props) {
                 </>
             )}
 
-            <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+            <ProductDetailModal
+                product={selectedProduct}
+                isBestValue={selectedProduct ? bestValueIds.has(selectedProduct.id) : false}
+                onClose={() => setSelectedProduct(null)}
+            />
             <RequestProductModal
                 open={showRequestModal}
                 initialName={query}

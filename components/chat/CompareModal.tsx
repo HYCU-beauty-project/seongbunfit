@@ -96,7 +96,7 @@ export default function CompareModal({ open, items, onClose, onRemove, onClearAl
                 return (
                   <div
                     key={item.id}
-                    className="w-[190px] shrink-0 rounded-xl border border-[var(--color-border)] p-3"
+                    className="flex h-full w-[190px] shrink-0 flex-col rounded-xl border border-[var(--color-border)] p-3"
                   >
                     <div className="flex items-start justify-between gap-1">
                       <span className="rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[9.5px] font-medium text-[var(--color-primary)]">
@@ -158,15 +158,20 @@ export default function CompareModal({ open, items, onClose, onRemove, onClearAl
                       />
                     </div>
 
-                    <a
-                      href={p.purchaseUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-export-ignore="true"
-                      className="mt-2.5 block rounded-lg bg-[var(--color-primary)] py-1.5 text-center text-[11px] font-medium text-white hover:bg-[var(--color-primary-hover)] transition-colors"
-                    >
-                      구매하러 가기
-                    </a>
+                    {/* mt-auto로 카드 하단에 고정해서, 제품명 줄바꿈 등으로 카드마다
+                        내용 길이가 달라도 "구매하러 가기" 버튼은 항상 같은 세로 위치에
+                        오게 했어요(부모가 flex라 카드 높이 자체는 이미 서로 같아요). */}
+                    <div className="mt-auto pt-2.5">
+                      <a
+                        href={p.purchaseUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-export-ignore="true"
+                        className="block rounded-lg bg-[var(--color-primary)] py-1.5 text-center text-[11px] font-medium text-white hover:bg-[var(--color-primary-hover)] transition-colors"
+                      >
+                        구매하러 가기
+                      </a>
+                    </div>
                   </div>
                 );
               })}

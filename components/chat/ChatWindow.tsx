@@ -586,14 +586,12 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                         <SidePanel mode="detail" ingredient={ingredient} />
                     )}
 
-                    {showSidePanel && (
-                        <button
-                            type="button"
-                            onClick={handleRestart}
-                            className="w-full rounded-xl border border-[var(--color-border)] bg-white py-2.5 text-[12.5px] font-medium text-[var(--color-ink-soft)] hover:bg-gray-50 transition-colors">
-                            처음부터 다시 시작하기
-                        </button>
-                    )}
+                    <button
+                        type="button"
+                        onClick={handleRestart}
+                        className="w-full rounded-xl border border-[var(--color-border)] bg-white py-2.5 text-[12.5px] font-medium text-[var(--color-ink-soft)] hover:bg-gray-50 transition-colors">
+                        처음부터 다시 시작하기
+                    </button>
                 </div>
             </div>
 

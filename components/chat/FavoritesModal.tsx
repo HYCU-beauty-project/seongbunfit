@@ -91,7 +91,7 @@ export default function FavoritesModal({ open, items, onClose, onRemove }: Props
                                                                 color: accentColor,
                                                             }}>
                                                             <span
-                                                                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                                                                className="h-1.5 w-1.5 shrink-0 translate-y-px rounded-full"
                                                                 style={{ backgroundColor: categoryColor }}
                                                                 aria-hidden
                                                             />

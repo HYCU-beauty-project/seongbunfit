@@ -7,9 +7,9 @@ export default async function ProductsPage() {
     const products = await getAllProducts();
 
     return (
-        <main className="min-h-screen bg-white">
+        <main className="flex min-h-screen flex-col bg-white">
             <Header />
-            <section className="mx-auto max-w-5xl px-6 py-14">
+            <section className="mx-auto w-full max-w-5xl flex-1 px-6 py-14">
                 <ProductsContent products={products} />
             </section>
             <Footer />

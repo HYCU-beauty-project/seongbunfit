@@ -4,9 +4,9 @@ import ContactContent from "@/components/ContactContent";
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="flex min-h-screen flex-col bg-white">
       <Header />
-      <section className="mx-auto max-w-5xl px-6 py-14">
+      <section className="mx-auto w-full max-w-5xl flex-1 px-6 py-14">
         <div className="mx-auto max-w-md">
           <h1 className="text-[22px] font-bold text-[var(--color-ink)]">문의하기</h1>
           <p className="mt-1.5 text-[13px] text-[var(--color-ink-faint)]">

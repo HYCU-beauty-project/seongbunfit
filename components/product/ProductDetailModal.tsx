@@ -7,10 +7,11 @@ import ArrowRightIcon from '@/components/ArrowRightIcon';
 
 interface Props {
     product: Product | null;
+    isBestValue?: boolean;
     onClose: () => void;
 }
 
-export default function ProductDetailModal({ product, onClose }: Props) {
+export default function ProductDetailModal({ product, isBestValue = false, onClose }: Props) {
     if (!product) return null;
 
     const ingredient = getIngredient(product.ingredientId);
@@ -32,17 +33,21 @@ export default function ProductDetailModal({ product, onClose }: Props) {
                 </div>
                 <div className="flex items-start justify-between px-6 pt-5">
                     <div>
-                        {relatedCategories.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5">
-                                {relatedCategories.map((c) => (
-                                    <span
-                                        key={c.key}
-                                        className="rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[10.5px] font-medium text-[var(--color-primary)]">
-                                        {c.label}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            {isBestValue && (
+                                <span className="flex items-center gap-1 rounded-full bg-[var(--color-accent-soft)] px-2 py-0.5 text-[10.5px] font-semibold text-[var(--color-accent-text)]">
+                                    <SparkleIcon />
+                                    성분핏 추천템
+                                </span>
+                            )}
+                            {relatedCategories.map((c) => (
+                                <span
+                                    key={c.key}
+                                    className="rounded-full bg-[var(--color-primary-soft)] px-2 py-0.5 text-[10.5px] font-medium text-[var(--color-primary)]">
+                                    {c.label}
+                                </span>
+                            ))}
+                        </div>
                         <h2 className="mt-2 text-[16px] font-bold text-[var(--color-ink)]">
                             {product.brand} {product.name}
                         </h2>
@@ -107,5 +112,13 @@ export default function ProductDetailModal({ product, onClose }: Props) {
                 </div>
             </div>
         </div>
+    );
+}
+
+function SparkleIcon() {
+    return (
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden className="shrink-0">
+            <path d="M12 2.5c.9 4 2.2 6.3 4.5 7.5-2.3 1.2-3.6 3.5-4.5 7.5-.9-4-2.2-6.3-4.5-7.5 2.3-1.2 3.6-3.5 4.5-7.5Z" />
+        </svg>
     );
 }
