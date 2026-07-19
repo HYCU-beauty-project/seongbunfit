@@ -4,12 +4,21 @@ import { useState } from "react";
 
 interface Props {
   compareCount: number;
+  favoriteCount: number;
   onOpenCalc: () => void;
   onOpenCompare: () => void;
+  onOpenFavorites: () => void;
   onOpenContact: () => void;
 }
 
-export default function MobileActionFabs({ compareCount, onOpenCalc, onOpenCompare, onOpenContact }: Props) {
+export default function MobileActionFabs({
+  compareCount,
+  favoriteCount,
+  onOpenCalc,
+  onOpenCompare,
+  onOpenFavorites,
+  onOpenContact,
+}: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -26,9 +35,18 @@ export default function MobileActionFabs({ compareCount, onOpenCalc, onOpenCompa
             }}
           />
           <SubFab
+            label={`즐겨찾기 ${favoriteCount > 0 ? `· ${favoriteCount}` : ""}`}
+            icon="⭐"
+            delay={60}
+            onClick={() => {
+              setOpen(false);
+              onOpenFavorites();
+            }}
+          />
+          <SubFab
             label={`비교함 ${compareCount > 0 ? `· ${compareCount}` : ""}`}
             icon="📊"
-            delay={60}
+            delay={120}
             onClick={() => {
               setOpen(false);
               onOpenCompare();
@@ -37,7 +55,7 @@ export default function MobileActionFabs({ compareCount, onOpenCalc, onOpenCompa
           <SubFab
             label="계산법 보기"
             icon="🧮"
-            delay={120}
+            delay={180}
             onClick={() => {
               setOpen(false);
               onOpenCalc();
