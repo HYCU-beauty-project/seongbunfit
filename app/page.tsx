@@ -7,10 +7,10 @@ import CountUp from '@/components/CountUp';
 import TypewriterHeading from '@/components/TypewriterHeading';
 import StepIcon from '@/components/StepIcon';
 import ResultUIShowcase from '@/components/ResultUIShowcase';
+import IconMarquee from '@/components/IconMarquee';
 import ConcernIcon from '@/components/ConcernIcon';
 import IngredientConverge from '@/components/IngredientConverge';
 import MeshGradientBg from '@/components/MeshGradientBg';
-import IconMarquee from '@/components/IconMarquee';
 import InteractiveScoreDemo from '@/components/InteractiveScoreDemo';
 import ScrollProgressLine from '@/components/ScrollProgressLine';
 import ScoreDonut from '@/components/ScoreDonut';
@@ -167,19 +167,19 @@ export default function LandingPage() {
                     </AnimateOnScroll>
                     {/* 데스크톱: Figma처럼 화살표로 단계 연결 + 스크롤에 반응하는 진행선 */}
                     <div className="relative mt-14 hidden items-start justify-center gap-3 md:flex">
-                        <ScrollProgressLine className="absolute left-[9%] right-[9%] top-[74px] -z-10" />
+                        <ScrollProgressLine className="absolute left-[9%] right-[9%] top-[82px] -z-10" />
                         {steps.map((step, idx) => (
                             <div key={step.title} className="flex items-start">
                                 <AnimateOnScroll delay={idx * 180} variant="scale">
                                     <Link
                                         href="/chat"
-                                        className="group flex w-[170px] flex-col items-center text-center gap-4">
+                                        className="group flex w-[184px] flex-col items-center text-center gap-4">
                                         <span className="text-[26px] font-extrabold leading-none text-[var(--color-primary)] transition-transform group-hover:-translate-y-0.5">
                                             {idx + 1}
                                         </span>
-                                        <span className="flex h-16 w-16 items-center justify-center rounded-full transition-colors group-hover:bg-[var(--color-primary-soft)]">
+                                        <span className="flex h-20 w-20 items-center justify-center rounded-full transition-colors group-hover:bg-[var(--color-primary-soft)]">
                                             <span className="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-4deg]">
-                                                <StepIcon name={step.icon} size={52} />
+                                                <StepIcon name={step.icon} size={64} />
                                             </span>
                                         </span>
                                         <div>
@@ -237,8 +237,8 @@ export default function LandingPage() {
 
             {/* Compare — 텍스트 나열 대신 실제 결과 화면 목업 + 말풍선 설명 */}
             <section className="bg-[var(--color-primary-soft)]/50 py-16">
-                <div className="mx-auto max-w-5xl px-6 grid gap-10 md:grid-cols-[1fr_1.2fr] md:items-start">
-                    <AnimateOnScroll className="md:sticky md:top-28">
+                <div className="mx-auto max-w-5xl px-6 grid gap-10 md:grid-cols-[0.85fr_1.15fr] md:items-start">
+                    <AnimateOnScroll>
                         <div>
                             <h2 className="text-[22px] font-bold leading-snug text-[var(--color-ink)]">
                                 광고성 리뷰 말고
