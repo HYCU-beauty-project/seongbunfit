@@ -117,24 +117,33 @@ export default function ResultCard({
 
             {compact ? (
                 <>
-                    {/* 요약 줄: 핵심 성분·가성비 점수만 한 줄로 보여주고, 막대그래프·추천 이유
-                같은 상세 내용은 버튼을 눌러야 펼쳐지는 바텀시트로 옮겼어요 — 카드 높이가
-                화면(모바일)을 넘지 않아서 캐러셀에서 카드 전체가 한눈에 들어와요. */}
+                    {/* 요약 줄: 핵심 성분·가성비 점수만 보여주고, 막대그래프·추천 이유 같은
+                상세 내용은 버튼을 눌러야 펼쳐지는 바텀시트로 옮겼어요 — 카드 높이가
+                화면(모바일)을 넘지 않아서 캐러셀에서 카드 전체가 한눈에 들어와요.
+                ⚠️ 성분명·점수·화살표를 한 줄에 다 욱여넣었더니 일부 실기기 브라우저에서
+                성분명 칸이 극단적으로 좁게 계산되어 글자가 거의 안 보이는 문제가 있었어요.
+                성분명은 그 자체로 한 줄을 통째로 쓰게 하고, 점수·상세보기는 아래 줄로
+                내려서 성분명이 다른 요소와 폭을 다툴 일이 없게 했어요. */}
                     <button
                         type="button"
                         onClick={() => setShowDetail(true)}
                         aria-label="배치·가격·예산 점수와 추천 이유 상세 보기"
-                        className="mt-2.5 flex w-full items-center gap-2 rounded-lg bg-[var(--color-primary-soft)]/60 px-3 py-2 text-left transition-colors hover:bg-[var(--color-primary-soft)]">
-                        <IngredientTag ingredientId={ingredient.id} size={18} />
-                        <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-[var(--color-ink)]">
-                            {ingredient.name}
+                        className="mt-2.5 block w-full rounded-lg bg-[var(--color-primary-soft)]/60 px-3 py-2 text-left transition-colors hover:bg-[var(--color-primary-soft)]">
+                        <span className="flex items-center gap-1.5">
+                            <IngredientTag ingredientId={ingredient.id} size={18} />
+                            <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-[var(--color-ink)]">
+                                {ingredient.name}
+                            </span>
                         </span>
-                        <span className="flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-[var(--color-accent-text)]">
-                            <SparkleIcon />
-                            {product.finalScore}
-                        </span>
-                        <span className="flex shrink-0 items-center text-[var(--color-primary)]">
-                            <ChevronDownIcon />
+                        <span className="mt-1.5 flex items-center justify-between">
+                            <span className="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--color-accent-text)]">
+                                <SparkleIcon />
+                                가성비 {product.finalScore}점
+                            </span>
+                            <span className="flex items-center gap-0.5 text-[10.5px] font-medium text-[var(--color-primary)]">
+                                상세보기
+                                <ChevronDownIcon />
+                            </span>
                         </span>
                     </button>
 
