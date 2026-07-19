@@ -92,10 +92,10 @@ export default function MobileActionFabs({
                 onClick={() => setOpen((v) => !v)}
                 aria-label={open ? '메뉴 닫기' : '메뉴 열기'}
                 aria-expanded={open}
-                className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-primary)] text-white shadow-md transition-transform active:scale-90">
+                className="relative flex h-11 w-11 shrink-0 items-center justify-center text-[var(--color-primary)] transition-transform active:scale-90">
                 <PlusIcon open={open} />
                 {!open && badgeCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-amber-400 px-1 text-[9px] font-semibold text-white">
+                    <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-amber-400 px-1 text-[9px] font-semibold text-white">
                         {badgeCount}
                     </span>
                 )}
@@ -136,12 +136,12 @@ function MenuItem({
 function PlusIcon({ open }: { open: boolean }) {
     return (
         <svg
-            width="18"
-            height="18"
+            width="22"
+            height="22"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.3"
+            strokeWidth="3.2"
             strokeLinecap="round"
             aria-hidden
             className="transition-transform duration-200"

@@ -20,7 +20,7 @@ import ChatInput from './ChatInput';
 import ScoreExplainer from './ScoreExplainer';
 import CompareModal from './CompareModal';
 import FavoritesModal from './FavoritesModal';
-import CompactConditionsBar from './CompactConditionsBar';
+import HeaderConditionsPanel from './HeaderConditionsPanel';
 import ResultCarousel from './ResultCarousel';
 import MobileActionFabs from './MobileActionFabs';
 import UtilityToolbar from './UtilityToolbar';
@@ -70,6 +70,8 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
     const [showCompareModal, setShowCompareModal] = useState(false);
     const [showFavoritesModal, setShowFavoritesModal] = useState(false);
     const [showContactModal, setShowContactModal] = useState(false);
+    // 모바일 헤더의 "선택한 조건 / 처음부터 다시 시작하기" 드롭다운 패널이에요.
+    const [showHeaderConditions, setShowHeaderConditions] = useState(false);
     const [previewIngredientId, setPreviewIngredientId] = useState<string | null>(null);
     const [compareItems, setCompareItems, compareHydrated] = useLocalStorage<CompareItem[]>(
         'ingredientfit:compare',
@@ -80,6 +82,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         [],
     );
     const scrollRef = useRef<HTMLDivElement>(null);
+    const headerConditionsRef = useRef<HTMLDivElement>(null);
     // 결과 카드처럼 세로로 긴 메시지가 새로 추가됐을 때, 그 메시지의 "시작 지점"으로
     // 스크롤하기 위한 ref예요 (아래 useEffect에서 사용).
     const lastMessageRef = useRef<HTMLDivElement>(null);
@@ -127,6 +130,18 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         handleConcernInput(`${category.label} 고민이에요`);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hydrated, searchParams, messages, conditions]);
+
+    // 헤더 드롭다운(선택한 조건 / 처음부터 다시 시작하기) 바깥을 탭하면 닫혀요.
+    useEffect(() => {
+        if (!showHeaderConditions) return;
+        function handleClickOutside(e: MouseEvent) {
+            if (headerConditionsRef.current && !headerConditionsRef.current.contains(e.target as Node)) {
+                setShowHeaderConditions(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showHeaderConditions]);
 
     const lastMessageId = messages[messages.length - 1]?.id;
 
@@ -477,19 +492,39 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                 className={`mx-auto animate-fade-up grid max-w-4xl gap-4 ${
                     forceStacked ? '' : 'md:grid-cols-[1fr_260px]'
                 }`}>
-                <div
-                    className={`relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ${
-                        forceStacked ? 'h-[calc(100dvh-96px)]' : 'h-[760px]'
-                    }`}>
-                    <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
-                        <span className="text-[12.5px] font-semibold text-[var(--color-ink)]">성분핏 AI 상담</span>
+                <div className="relative flex h-[760px] flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
+                    <div ref={headerConditionsRef} className="relative border-b border-[var(--color-border)]">
+                        <div className="flex items-center justify-between px-4 py-3">
+                            <span className="text-[12.5px] font-semibold text-[var(--color-ink)]">성분핏 AI 상담</span>
+                            {forceStacked && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowHeaderConditions((v) => !v)}
+                                    aria-expanded={showHeaderConditions}
+                                    aria-label={showHeaderConditions ? '선택한 조건 닫기' : '선택한 조건 보기'}
+                                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-soft)] transition-colors hover:bg-gray-50 ${
+                                        showHeaderConditions ? 'bg-gray-50' : ''
+                                    }`}>
+                                    <HeaderChevronIcon rotated={showHeaderConditions} />
+                                </button>
+                            )}
+                        </div>
+
+                        {forceStacked && showHeaderConditions && (
+                            <HeaderConditionsPanel
+                                category={category}
+                                ingredient={ingredient}
+                                budget={budget}
+                                onEditCategory={handleEditCategory}
+                                onEditIngredient={conditions.ingredientId ? handleEditIngredient : undefined}
+                                onEditBudget={conditions.budgetId ? handleEditBudget : undefined}
+                                onRestart={handleRestart}
+                                onClose={() => setShowHeaderConditions(false)}
+                            />
+                        )}
                     </div>
 
-                    <div
-                        ref={scrollRef}
-                        className={`chat-scroll flex-1 overflow-y-auto py-6 space-y-4 ${
-                            forceStacked ? 'px-3' : 'px-6'
-                        }`}>
+                    <div ref={scrollRef} className="chat-scroll flex-1 overflow-y-auto px-6 py-6 space-y-4">
                         {!hydrated ? null : (
                             <>
                                 {messages.map((message) => (
@@ -550,8 +585,11 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                     />
                 </div>
 
-                <div className="space-y-3">
-                    {!forceStacked && (
+                {/* 모바일(forceStacked)에서는 이 우측 패널 전체(계산법/비교함/선택한 조건/
+            다시 시작하기)를 채팅창 헤더의 화살표 패널 + 입력창 옆 "+" 메뉴로 옮겼어요 —
+            대화가 길어져도 카드 아래로 스크롤할 필요 없이 언제든 확인할 수 있어요. */}
+                {!forceStacked && (
+                    <div className="space-y-3">
                         <UtilityToolbar
                             onOpenCalc={() => setShowScoreExplainer(true)}
                             compareCount={compareHydrated ? compareItems.length : 0}
@@ -560,19 +598,8 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                             onOpenFavorites={() => setShowFavoritesModal(true)}
                             onOpenContact={() => setShowContactModal(true)}
                         />
-                    )}
 
-                    {showSidePanel &&
-                        (forceStacked ? (
-                            <CompactConditionsBar
-                                category={category}
-                                ingredient={ingredient}
-                                budget={budget}
-                                onEditCategory={handleEditCategory}
-                                onEditIngredient={conditions.ingredientId ? handleEditIngredient : undefined}
-                                onEditBudget={conditions.budgetId ? handleEditBudget : undefined}
-                            />
-                        ) : (
+                        {showSidePanel && (
                             <SidePanel
                                 mode="conditions"
                                 category={category}
@@ -582,24 +609,21 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                                 onEditIngredient={conditions.ingredientId ? handleEditIngredient : undefined}
                                 onEditBudget={conditions.budgetId ? handleEditBudget : undefined}
                             />
-                        ))}
+                        )}
 
-                    {/* 모바일에서는 호버 프리뷰가 없어서, 성분 상세는 카드를 눌러 펼치는 방식으로
-              대체돼요(IngredientCard의 compact 모드) — 그래서 이 패널은 데스크톱에서만 보여줘요. */}
-                    {!forceStacked && step === 'ingredient' && previewIngredient && (
-                        <SidePanel mode="detail" ingredient={previewIngredient} />
-                    )}
-                    {!forceStacked && step !== 'ingredient' && ingredient && (
-                        <SidePanel mode="detail" ingredient={ingredient} />
-                    )}
+                        {step === 'ingredient' && previewIngredient && (
+                            <SidePanel mode="detail" ingredient={previewIngredient} />
+                        )}
+                        {step !== 'ingredient' && ingredient && <SidePanel mode="detail" ingredient={ingredient} />}
 
-                    <button
-                        type="button"
-                        onClick={handleRestart}
-                        className="w-full rounded-xl border border-[var(--color-border)] bg-white py-2.5 text-[12.5px] font-medium text-[var(--color-ink-soft)] hover:bg-gray-50 transition-colors">
-                        처음부터 다시 시작하기
-                    </button>
-                </div>
+                        <button
+                            type="button"
+                            onClick={handleRestart}
+                            className="w-full rounded-xl border border-[var(--color-border)] bg-white py-2.5 text-[12.5px] font-medium text-[var(--color-ink-soft)] hover:bg-gray-50 transition-colors">
+                            처음부터 다시 시작하기
+                        </button>
+                    </div>
+                )}
             </div>
 
             <ScoreExplainer
@@ -629,6 +653,25 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
 
             <ContactModal open={showContactModal} onClose={() => setShowContactModal(false)} />
         </div>
+    );
+}
+
+function HeaderChevronIcon({ rotated }: { rotated: boolean }) {
+    return (
+        <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+            className="transition-transform duration-200"
+            style={{ transform: rotated ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+            <path d="m6 9 6 6 6-6" />
+        </svg>
     );
 }
 
@@ -755,7 +798,7 @@ function MessageBubble({
         return (
             <div className="flex items-start gap-2.5 animate-fade-up">
                 <AiAvatar />
-                <div className={forceStacked ? 'max-w-[92%] space-y-2.5' : 'max-w-[85%] space-y-2.5'}>
+                <div className="max-w-[85%] space-y-2.5">
                     <div className="rounded-2xl rounded-tl-sm bg-[var(--color-primary-soft)] px-4 py-3">
                         <p className="text-[13.5px] font-medium text-[var(--color-ink)]">
                             {message.intro || category.intro}
@@ -787,7 +830,7 @@ function MessageBubble({
         return (
             <div className="flex items-start gap-2.5 animate-fade-up">
                 <AiAvatar />
-                <div className={forceStacked ? 'max-w-[92%] space-y-2.5' : 'max-w-[85%] space-y-2.5'}>
+                <div className="max-w-[85%] space-y-2.5">
                     <div className="rounded-2xl rounded-tl-sm bg-[var(--color-primary-soft)] px-4 py-3">
                         <p className="text-[13.5px] font-medium text-[var(--color-ink)]">
                             좋아요! {message.ingredientName}이 상위에 배치된 세럼을 찾아드릴게요. 예산은 어느 정도
@@ -819,7 +862,10 @@ function MessageBubble({
     return (
         <div className="flex items-start gap-2.5 animate-fade-up">
             <AiAvatar />
-            <div className={forceStacked ? 'max-w-full space-y-3.5' : 'max-w-[90%] space-y-3.5'}>
+            {/* 다른 메시지 말풍선은 max-w-[85~90%]로 좁게 두지만, 결과 카드 캐러셀은 그만큼
+          좁아지면 카드가 화면 중앙이 아니라 왼쪽으로 치우쳐 보이고 성분명 같은 텍스트가
+          잘려요. 그래서 이 메시지만 채팅창 폭을 거의 다 쓰도록 넓게 둬요. */}
+            <div className="w-full min-w-0 space-y-3.5">
                 <div className="rounded-2xl rounded-tl-sm bg-[var(--color-primary-soft)] px-4 py-3">
                     <p className="text-[13.5px] font-medium text-[var(--color-ink)]">
                         선택하신 성분과 예산을 기준으로 TOP{message.results.length} 세럼을 추천드려요.
@@ -850,6 +896,7 @@ function MessageBubble({
                         onToggleCompare={(product) => onToggleCompare(product, ingredient.name, category.label)}
                         favoriteIds={favoriteIds}
                         onToggleFavorite={(product) => onToggleFavorite(product, ingredient.name, category.label)}
+                        compact={forceStacked}
                         cardsPerView={1}
                     />
                 )}

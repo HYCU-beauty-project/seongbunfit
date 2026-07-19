@@ -11,6 +11,8 @@ interface Props {
     onToggleCompare: (product: ScoredProduct) => void;
     favoriteIds?: string[];
     onToggleFavorite?: (product: ScoredProduct) => void;
+    // true면(모바일) 카드가 요약만 보여주고 상세는 바텀시트로 펼쳐요.
+    compact?: boolean;
     // 한 화면에 보여줄 카드 개수예요. 모바일(좁은 채팅창)에선 1을 줘서 카드 하나가
     // 풀와이드로 슬라이드되게 하고, 데스크톱(넓은 채팅창)에선 2를 줘서 "2개는 바로
     // 보이고, 슬라이드하면 3번째가 나오는" 느낌을 줘요.
@@ -24,6 +26,7 @@ export default function ResultCarousel({
     onToggleCompare,
     favoriteIds = [],
     onToggleFavorite,
+    compact = false,
     cardsPerView = 1,
 }: Props) {
     const trackRef = useRef<HTMLDivElement>(null);
@@ -110,6 +113,7 @@ export default function ResultCarousel({
                                 onToggleCompare={() => onToggleCompare(product)}
                                 isFavorite={favoriteIds.includes(product.id)}
                                 onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(product) : undefined}
+                                compact={compact}
                             />
                         </div>
                     ))}

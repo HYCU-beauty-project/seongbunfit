@@ -15,6 +15,10 @@ interface Props {
     onToggleCompare?: () => void;
     isFavorite?: boolean;
     onToggleFavorite?: () => void;
+    // true면(모바일) 카드에 요약만 보여주고 막대그래프·추천 이유는 "상세보기" 눌렀을 때
+    // 바텀시트로 펼쳐요. false면(데스크톱) 예전처럼 카드 안에 전부 바로 보여줘요 —
+    // 데스크톱은 카드 폭이 넓어서 다 펼쳐놔도 카드가 지나치게 길어지지 않아요.
+    compact?: boolean;
 }
 
 const rankLabel: Record<number, string> = {
@@ -31,10 +35,15 @@ export default function ResultCard({
     onToggleCompare,
     isFavorite = false,
     onToggleFavorite,
+    compact = false,
 }: Props) {
     const pricePerMl = Math.round(product.price / product.volumeMl);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isExporting, setIsExporting] = useState(false);
+    // 카드 한 장이 화면(특히 모바일)보다 길어지면 캐러셀로 넘겨봐도 카드 전체가
+    // 한눈에 안 들어와요. 그래서 카드는 "요약"만 보여주고, 배치·가격·예산 막대그래프와
+    // 추천 이유 같은 상세 내용은 "상세보기"를 눌렀을 때 바텀시트로 펼쳐서 보여줘요.
+    const [showDetail, setShowDetail] = useState(false);
 
     async function handleShare() {
         if (!cardRef.current || isExporting) return;
@@ -63,6 +72,7 @@ export default function ResultCard({
     }
 
     return (
+        <>
         <div
             ref={cardRef}
             className="flex h-full flex-col rounded-xl bg-white p-3.5 shadow-[inset_0_0_0_1.5px_var(--color-border)]">
@@ -105,50 +115,77 @@ export default function ResultCard({
                 </div>
             </div>
 
-            {/* flex-1로 남는 공간을 채워서, 카드마다 추천 이유 길이가 달라도
-          아래 버튼들이 항상 같은 위치에 오게 했어요. */}
-            <div className="mt-2.5 flex-1 rounded-lg bg-[var(--color-primary-soft)]/60 px-3 py-2 text-[11.5px] text-[var(--color-ink-soft)] leading-relaxed">
-                <div className="flex items-center justify-between gap-1.5">
-                    <span className="flex items-center gap-1.5">
+            {compact ? (
+                <>
+                    {/* 요약 줄: 핵심 성분·가성비 점수만 한 줄로 보여주고, 막대그래프·추천 이유
+                같은 상세 내용은 버튼을 눌러야 펼쳐지는 바텀시트로 옮겼어요 — 카드 높이가
+                화면(모바일)을 넘지 않아서 캐러셀에서 카드 전체가 한눈에 들어와요. */}
+                    <button
+                        type="button"
+                        onClick={() => setShowDetail(true)}
+                        aria-label="배치·가격·예산 점수와 추천 이유 상세 보기"
+                        className="mt-2.5 flex w-full items-center gap-2 rounded-lg bg-[var(--color-primary-soft)]/60 px-3 py-2 text-left transition-colors hover:bg-[var(--color-primary-soft)]">
                         <IngredientTag ingredientId={ingredient.id} size={18} />
-                        <span className="text-[11.5px] font-semibold text-[var(--color-ink)]">{ingredient.name}</span>
-                    </span>
-                    <span className="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--color-accent-text)]">
-                        <SparkleIcon />
-                        {product.finalScore}
-                    </span>
-                </div>
+                        <span className="min-w-0 flex-1 text-[12px] font-semibold text-[var(--color-ink)]">
+                            {ingredient.name}
+                        </span>
+                        <span className="flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-[var(--color-accent-text)]">
+                            <SparkleIcon />
+                            {product.finalScore}
+                        </span>
+                        <span className="flex shrink-0 items-center text-[var(--color-primary)]">
+                            <ChevronDownIcon />
+                        </span>
+                    </button>
 
-                {/* 배치·가격·예산 세 점수를 한눈에 비교할 수 있도록 애니메이션 막대그래프로 보여줘요. */}
-                <div className="mt-1.5 space-y-1">
-                    <ScoreBar
-                        label={`배치 ${product.actualPosition}번째`}
-                        value={product.placementScore}
-                        color="var(--color-primary)"
-                        delay={rank * 80}
-                        size="sm"
-                    />
-                    <ScoreBar
-                        label="ml당 가격"
-                        value={product.priceScore}
-                        color="var(--color-accent-deep)"
-                        delay={rank * 80 + 50}
-                        size="sm"
-                    />
-                    <ScoreBar
-                        label="예산 여유"
-                        value={product.budgetScore}
-                        color="#c9a86a"
-                        delay={rank * 80 + 100}
-                        size="sm"
-                    />
-                </div>
+                    {/* 남는 공간을 채워서, 카드마다 요약 줄 아래 여백이 달라도
+                아래 버튼들이 항상 같은 위치에 오게 했어요. */}
+                    <div className="flex-1" />
+                </>
+            ) : (
+                <div className="mt-2.5 flex-1 rounded-lg bg-[var(--color-primary-soft)]/60 px-3 py-2 text-[11.5px] text-[var(--color-ink-soft)] leading-relaxed">
+                    <div className="flex items-center justify-between gap-1.5">
+                        <span className="flex items-center gap-1.5">
+                            <IngredientTag ingredientId={ingredient.id} size={18} />
+                            <span className="text-[11.5px] font-semibold text-[var(--color-ink)]">{ingredient.name}</span>
+                        </span>
+                        <span className="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--color-accent-text)]">
+                            <SparkleIcon />
+                            {product.finalScore}
+                        </span>
+                    </div>
 
-                <p className="mt-1.5">
-                    <span className="font-medium text-[var(--color-ink)]">추천 이유 </span>
-                    {product.reason || '가성비 조건에 맞는 추천 제품이에요.'}
-                </p>
-            </div>
+                    {/* 배치·가격·예산 세 점수를 한눈에 비교할 수 있도록 애니메이션 막대그래프로 보여줘요. */}
+                    <div className="mt-1.5 space-y-1">
+                        <ScoreBar
+                            label={`배치 ${product.actualPosition}번째`}
+                            value={product.placementScore}
+                            color="var(--color-primary)"
+                            delay={rank * 80}
+                            size="sm"
+                        />
+                        <ScoreBar
+                            label="ml당 가격"
+                            value={product.priceScore}
+                            color="var(--color-accent-deep)"
+                            delay={rank * 80 + 50}
+                            size="sm"
+                        />
+                        <ScoreBar
+                            label="예산 여유"
+                            value={product.budgetScore}
+                            color="#c9a86a"
+                            delay={rank * 80 + 100}
+                            size="sm"
+                        />
+                    </div>
+
+                    <p className="mt-1.5">
+                        <span className="font-medium text-[var(--color-ink)]">추천 이유 </span>
+                        {product.reason || '가성비 조건에 맞는 추천 제품이에요.'}
+                    </p>
+                </div>
+            )}
 
             <div data-export-ignore="true" className="mt-2.5 flex gap-2">
                 {onToggleCompare && (
@@ -183,6 +220,58 @@ export default function ResultCard({
                 <ArrowRightIcon />
             </a>
         </div>
+
+        {/* 배치·가격·예산 막대그래프와 추천 이유는 카드 안에 상시 노출하지 않고,
+            "상세보기"를 눌렀을 때만 아래에서 올라오는 바텀시트로 보여줘요. */}
+        {compact && showDetail && (
+            <div
+                className="fixed inset-0 z-50 flex items-end justify-center bg-black/20 sm:items-center sm:px-4"
+                onClick={() => setShowDetail(false)}>
+                <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="animate-fade-up w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl">
+                    <div className="flex items-center justify-between">
+                        <p className="text-[13px] font-semibold text-[var(--color-ink)]">
+                            {product.brand} {product.name}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => setShowDetail(false)}
+                            aria-label="닫기"
+                            className="text-[18px] leading-none text-[var(--color-ink-faint)] hover:text-[var(--color-ink)] transition-colors">
+                            ✕
+                        </button>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between gap-1.5 rounded-lg bg-[var(--color-primary-soft)]/60 px-3 py-2">
+                        <span className="flex items-center gap-1.5">
+                            <IngredientTag ingredientId={ingredient.id} size={18} />
+                            <span className="text-[11.5px] font-semibold text-[var(--color-ink)]">{ingredient.name}</span>
+                        </span>
+                        <span className="flex items-center gap-1 text-[12.5px] font-semibold text-[var(--color-accent-text)]">
+                            <SparkleIcon />
+                            가성비 {product.finalScore}점
+                        </span>
+                    </div>
+
+                    <div className="mt-3 space-y-2">
+                        <ScoreBar
+                            label={`핵심성분 배치 (${product.actualPosition}번째)`}
+                            value={product.placementScore}
+                            color="var(--color-primary)"
+                        />
+                        <ScoreBar label="ml당 가격" value={product.priceScore} color="var(--color-accent-deep)" delay={50} />
+                        <ScoreBar label="예산 여유" value={product.budgetScore} color="#c9a86a" delay={100} />
+                    </div>
+
+                    <p className="mt-3 text-[12px] leading-relaxed text-[var(--color-ink-soft)]">
+                        <span className="font-medium text-[var(--color-ink)]">추천 이유 </span>
+                        {product.reason || '가성비 조건에 맞는 추천 제품이에요.'}
+                    </p>
+                </div>
+            </div>
+        )}
+        </>
     );
 }
 
@@ -190,6 +279,24 @@ function SparkleIcon() {
     return (
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden className="shrink-0">
             <path d="M12 2.5c.9 4 2.2 6.3 4.5 7.5-2.3 1.2-3.6 3.5-4.5 7.5-.9-4-2.2-6.3-4.5-7.5 2.3-1.2 3.6-3.5 4.5-7.5Z" />
+        </svg>
+    );
+}
+
+function ChevronDownIcon() {
+    return (
+        <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+            className="shrink-0">
+            <path d="m6 9 6 6 6-6" />
         </svg>
     );
 }
