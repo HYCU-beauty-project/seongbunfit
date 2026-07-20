@@ -813,8 +813,13 @@ function MessageBubble({
         return (
             <div className="flex items-start gap-2.5 animate-fade-up">
                 <AiAvatar />
-                <div className="max-w-[85%] space-y-2.5">
-                    <div className="rounded-2xl rounded-tl-sm bg-[var(--color-primary-soft)] px-4 py-3">
+                {/* 다른 텍스트 말풍선은 max-w-[80~85%]로 좁게 두지만, 여기 성분 카드
+              리스트는 ResultCard처럼 실제 박스 콘텐츠라 좁게 담으면 카드가 눌려
+              보여요. results 메시지는 이미 이 이유로 폭을 넓혔었는데, 여기는 그대로
+              85%에 남아있어서 "고민 선택 직후엔 채팅창이 좁았다가 결과가 나오면
+              갑자기 넓어지는" 것처럼 보였어요 — 두 단계 폭을 맞췄어요. */}
+                <div className="w-full min-w-0 space-y-2.5">
+                    <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[var(--color-primary-soft)] px-4 py-3">
                         <p className="text-[13.5px] font-medium text-[var(--color-ink)]">
                             {message.intro || category.intro}
                         </p>
