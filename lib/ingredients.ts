@@ -20,6 +20,7 @@ export const categories: Category[] = [
         goodFor: "일반~지성, 저농도(0.01~0.3%)부터 권장",
         recommended: true,
         irritant: true,
+        pregnancyUnsafe: true,
       },
       {
         id: "adenosine",

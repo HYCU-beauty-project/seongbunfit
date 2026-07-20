@@ -1,4 +1,5 @@
-import type { Category } from "@/types";
+import type { Category, Ingredient } from "@/types";
+import { getAllUniqueIngredients } from "./ingredients";
 
 // 사용자 문장에 이 표현이 있으면 "피부가 이미 자극된 상태"로 간주해요.
 // AI 분류 결과와 상관없이(=AI가 카테고리를 잘못 골라도) 항상 체크해서, 어떤
@@ -27,6 +28,63 @@ const IRRITATION_SIGNALS = [
 
 export function hasIrritationSignal(text: string): boolean {
   return IRRITATION_SIGNALS.some((kw) => text.includes(kw));
+}
+
+// 임신·수유를 언급하면, 문장이 어떤 카테고리로 분류되든(예: "기미"만 보고
+// 주름·탄력으로 잘못 분류되더라도) 레티놀처럼 임신 중 사용이 권장되지 않는
+// 성분(Ingredient.pregnancyUnsafe)을 항상 추천에서 제외해요. 오탐(false positive)보다
+// 놓치는(false negative) 쪽이 훨씬 위험한 항목이라, 표현을 넉넉히 잡았어요.
+const PREGNANCY_SIGNALS = ["임신", "임산부", "임신부", "예비맘", "예비 맘", "예비엄마", "수유", "모유"];
+
+export function hasPregnancySignal(text: string): boolean {
+  return PREGNANCY_SIGNALS.some((kw) => text.includes(kw));
+}
+
+// "이 성분 썼는데 좁쌀 났어요", "히알루론산 알레르기 있어요"처럼, 사용자가 특정
+// 성분명을 직접 언급하면서 부작용·알레르기 반응을 이야기하면, 그 성분은 카테고리
+// 분류 결과와 무관하게 추천에서 제외해요. "카테고리 태그 하나만 보고 하드코딩된
+// 세트를 그대로 띄우는" 문제를 막기 위한 안전장치예요.
+const NEGATIVE_REACTION_SIGNALS = [
+  "부작용",
+  "안맞",
+  "안 맞",
+  "안 받",
+  "안받",
+  "트러블 났",
+  "트러블났",
+  "뒤집어",
+  "좁쌀",
+  "여드름 났",
+  "여드름났",
+  "뾰루지 났",
+  "뾰루지났",
+  "뒤집혔",
+  "알레르기",
+  "알러지",
+];
+
+// DB의 성분명은 "병풀추출물"처럼 정식 명칭인데, 사용자는 "병풀"이나 마케팅에서 흔히
+// 쓰이는 "시카" 같은 축약형/별칭으로 말하는 경우가 많아요. 정식 명칭만 정확히
+// 일치시키면 이런 경우를 다 놓치게 돼서, 접미어를 뗀 형태와 알려진 별칭도 같이 확인해요.
+const INGREDIENT_ALIASES: Record<string, string[]> = {
+  centella: ["시카", "병풀"],
+};
+
+function ingredientNameVariants(ingredient: Ingredient): string[] {
+  const variants = [ingredient.name];
+  const stripped = ingredient.name.replace(/(추출물|엔피)$/, "");
+  if (stripped !== ingredient.name && stripped.length >= 2) variants.push(stripped);
+  const aliases = INGREDIENT_ALIASES[ingredient.id];
+  if (aliases) variants.push(...aliases);
+  return variants;
+}
+
+export function findComplainedIngredientIds(text: string): string[] {
+  const hasNegativeSignal = NEGATIVE_REACTION_SIGNALS.some((kw) => text.includes(kw));
+  if (!hasNegativeSignal) return [];
+  return getAllUniqueIngredients()
+    .filter((ingredient) => ingredientNameVariants(ingredient).some((variant) => text.includes(variant)))
+    .map((ingredient) => ingredient.id);
 }
 
 // 사용자가 두 가지 이상의 활성 성분을 "같이/함께 쓴다"는 뉘앙스로 언급하면, 병용 시
@@ -71,10 +129,15 @@ export interface SafetyAdjustment {
 }
 
 /**
- * 자극 신호(이미 자극된 피부)나 조합 주의(레티놀+비타민C 등)가 감지되면, 살리실산·
- * 레티놀처럼 자극을 줄 수 있는 성분(Ingredient.irritant === true)이 "추천" 배지를
- * 달고 1순위로 나가지 않도록 순서를 조정해요. 경고 문구만 띄우고 정작 그 성분을 여전히
- * 1순위로 추천하면 모순이라, 두 안전장치를 하나로 합쳤어요.
+ * 자극 신호(이미 자극된 피부), 임신·수유, 사용자가 직접 언급한 부작용 성분, 조합
+ * 주의(레티놀+비타민C 등) 중 하나라도 감지되면 해당 성분을 목록에서 아예 제거해요.
+ *
+ * ⚠️ 예전엔 "맨 뒤로 밀어내고 캡션에 경고를 붙이는" 방식이었는데, 성분 카드가 기본
+ * 접힌 상태라 caution 문구는 카드를 펼쳐야만 보여요. 그래서 목록 끝에 있어도 얼핏
+ * 보기엔 다른 성분과 똑같이 "정상적으로 추천된 카드"처럼 보이는 문제가 있었어요.
+ * 배너에서는 "제외했다"고 말해놓고 목록엔 그대로 있으니 모순으로 보였던 거예요.
+ * 그래서 아예 목록에서 빼버리는 방식으로 바꿨어요 — 이제 제외된 성분은 카드 자체가
+ * 존재하지 않고, 어떤 성분이 왜 빠졌는지는 상단 notice 배너에 이름을 콕 집어 안내해요.
  *
  * notice는 화면에 별도 경고 박스로 항상 표시돼요 — AI가 생성하는 인사말 문장과는
  * 독립적이라, AI 응답이 이상하게 나와도 이 경고만큼은 항상 그대로 노출돼요.
@@ -84,30 +147,69 @@ export function applySafetyAdjustment(
   text: string
 ): SafetyAdjustment {
   const irritated = hasIrritationSignal(text);
+  const pregnant = hasPregnancySignal(text);
   const combinationNotice = getCombinationCaution(text);
-  const needsAdjustment = irritated || combinationNotice !== null;
+  const complainedIds = findComplainedIngredientIds(text);
 
-  const notices = [
-    irritated
-      ? "⚠️ 지금 말씀하신 내용에 따가움·붉은기 같은 자극 증상이 있는 것 같아요. " +
-        "각질 제거 성분(살리실산 등)이나 레티놀 같은 자극성 성분은 피부가 진정된 후에 사용을 권장해요. " +
-        "증상이 심하거나 계속되면 피부과 상담을 받아보세요."
-      : null,
-    combinationNotice,
-  ].filter((n): n is string => Boolean(n));
+  const needsAdjustment =
+    irritated || pregnant || combinationNotice !== null || complainedIds.length > 0;
 
   if (!needsAdjustment) return { category, notice: null };
 
-  const hasIrritant = category.ingredients.some((i) => i.irritant);
-  if (!hasIrritant) return { category, notice: notices.join("\n\n") || null };
+  // 성분 하나가 여러 이유로 걸릴 수 있어서(예: 임신 중 + 레티놀=irritant도 true),
+  // 우선순위 순으로 딱 하나의 이유만 골라요. exclusionReason이 null이 아니면 = 제외 대상.
+  function exclusionReason(ingredient: Ingredient): string | null {
+    if (pregnant && ingredient.pregnancyUnsafe) {
+      return "임신·수유 중에는 사용이 권장되지 않는 성분이에요.";
+    }
+    if (complainedIds.includes(ingredient.id)) {
+      return "이미 트러블·알레르기 반응이 있었다고 하신 성분이에요.";
+    }
+    if (irritated && ingredient.irritant) {
+      return "지금처럼 피부에 자극 증상이 있을 땐 권장하지 않는 성분이에요.";
+    }
+    return null;
+  }
 
-  const safeFirst = category.ingredients.find((i) => !i.irritant);
+  const withReason = category.ingredients.map((ingredient) => ({
+    ingredient,
+    reason: exclusionReason(ingredient),
+  }));
+
+  const safe = withReason.filter((x) => x.reason === null).map((x) => x.ingredient);
+  const excluded = withReason.filter((x) => x.reason !== null);
+  const excludedNames = excluded.map((x) => x.ingredient.name);
+
+  const notices = [
+    pregnant
+      ? "🚫 임신·수유 중이라고 말씀해 주셨어요. 레티놀(비타민A 유도체)처럼 임신·수유 중 사용이 " +
+        "권장되지 않는 성분은 아래 목록에서 아예 제외했어요. 사용 중인 모든 성분은 산부인과·피부과 " +
+        "상담 후 사용을 결정하는 게 안전해요."
+      : null,
+    irritated
+      ? "⚠️ 지금 말씀하신 내용에 따가움·붉은기 같은 자극 증상이 있는 것 같아요. " +
+        "각질 제거 성분(살리실산 등)이나 레티놀 같은 자극성 성분은 아래 목록에서 제외했어요. " +
+        "증상이 심하거나 계속되면 피부과 상담을 받아보세요."
+      : null,
+    combinationNotice,
+    complainedIds.length > 0
+      ? "🚫 말씀하신 내용에 특정 성분을 사용하고 트러블·알레르기 반응이 있었다는 내용이 있어서, " +
+        "그 성분은 아래 목록에서 제외했어요. 다시 사용하시기 전엔 꼭 성분명을 직접 확인해 주세요."
+      : null,
+    excludedNames.length > 0 ? `제외된 성분: ${excludedNames.join(", ")}` : null,
+  ].filter((n): n is string => Boolean(n));
+
+  // 안전한 성분이 하나도 안 남으면(극단적인 케이스 — 카테고리 성분 3개가 전부 걸림),
+  // 빈 목록을 보여주는 것보단 원래 목록을 그대로 두고 경고만 강하게 띄워요.
+  if (safe.length === 0) {
+    return { category, notice: notices.join("\n\n") || null };
+  }
 
   const adjusted: Category = {
     ...category,
-    ingredients: category.ingredients.map((ingredient) => ({
+    ingredients: safe.map((ingredient, idx) => ({
       ...ingredient,
-      recommended: safeFirst ? ingredient.id === safeFirst.id : !ingredient.irritant,
+      recommended: idx === 0,
     })),
   };
 

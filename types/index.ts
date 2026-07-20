@@ -17,6 +17,10 @@ export interface Ingredient {
   // 자극/각질제거 성분(살리실산, 레티놀 등) — 이미 피부가 자극된 상태일 땐
   // 이 성분을 1순위로 추천하면 안 돼요. lib/safety.ts에서 이 값을 보고 순위를 조정해요.
   irritant?: boolean;
+  // 임신·수유 중에는 사용이 권장되지 않는 성분(레티놀=비타민A 유도체 등).
+  // lib/safety.ts에서 사용자가 임신·수유를 언급하면 이 값을 가진 성분을 추천에서
+  // 강제로 제외해요 — 카테고리 분류 결과와 무관하게 항상 적용되는 안전장치예요.
+  pregnancyUnsafe?: boolean;
 }
 
 export interface Category {
