@@ -171,6 +171,8 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text }),
             });
+            // 서버 오류를 "지원하지 않는 질문" 안내로 오인하지 않게 여기서 걸러요.
+            if (!res.ok) throw new Error(`chat api ${res.status}`);
             const data = await res.json();
             applyConcernApiResponse(data);
         } catch {
@@ -281,6 +283,8 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ingredientId, budgetId }),
             });
+            // 서버 오류를 "조건에 맞는 제품 없음"으로 오인해 조건까지 확정하면 안 돼요.
+            if (!res.ok) throw new Error(`recommend api ${res.status}`);
             const data = await res.json();
             const results: ScoredProduct[] = data.results ?? [];
 
@@ -365,6 +369,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text }),
             });
+            if (!res.ok) return false;
             const data = await res.json();
             if (data.categoryKey && !data.clarifyingQuestion) {
                 setDraft('');

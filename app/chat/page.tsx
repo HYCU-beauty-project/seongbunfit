@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Header from "@/components/Header";
 import Modal from "@/components/ui/Modal";
 import ChatWindow from "@/components/chat/ChatWindow";
@@ -24,7 +24,10 @@ export default function ChatPage() {
           )}
         </div>
       ) : (
-        <ChatWindow />
+        // ChatWindow가 useSearchParams()를 쓰므로 Suspense 경계가 없으면 빌드가 실패해요.
+        <Suspense fallback={null}>
+          <ChatWindow />
+        </Suspense>
       )}
       <Footer />
     </main>

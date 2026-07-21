@@ -68,7 +68,16 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     (updater: T | ((prev: T) => T)) => {
       try {
         const prevRaw = getSnapshot(key);
-        const prev = prevRaw !== null ? (JSON.parse(prevRaw) as T) : initialValue;
+        // 저장된 값이 깨진 JSON이어도 쓰기가 막히면 안 되니까, 파싱 실패는
+        // initialValue 기준으로 덮어써요.
+        let prev = initialValue;
+        if (prevRaw !== null) {
+          try {
+            prev = JSON.parse(prevRaw) as T;
+          } catch {
+            prev = initialValue;
+          }
+        }
         const next =
           typeof updater === "function" ? (updater as (p: T) => T)(prev) : updater;
         window.localStorage.setItem(key, JSON.stringify(next));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Modal from "@/components/ui/Modal";
 import ChatWindow from "@/components/chat/ChatWindow";
 import { useLocalStorage } from "@/lib/useLocalStorage";
@@ -21,7 +21,10 @@ export default function MobileChatPage() {
           )}
         </div>
       ) : (
-        <ChatWindow forceStacked />
+        // ChatWindow가 useSearchParams()를 쓰므로 Suspense 경계가 없으면 빌드가 실패해요.
+        <Suspense fallback={null}>
+          <ChatWindow forceStacked />
+        </Suspense>
       )}
     </>
   );

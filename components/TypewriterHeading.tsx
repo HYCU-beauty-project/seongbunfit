@@ -30,11 +30,11 @@ export default function TypewriterHeading({ lines, speed = 45, startDelay = 150 
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    // interval을 effect 스코프에 두어야 타이핑 도중 언마운트돼도 확실히 정리돼요.
+    let interval: ReturnType<typeof setInterval> | undefined;
     const startTimer = setTimeout(() => {
       let i = 0;
-      const interval = setInterval(() => {
-        if (cancelled) return;
+      interval = setInterval(() => {
         i++;
         setVisibleCount(i);
         if (i >= fullLength) {
@@ -44,8 +44,8 @@ export default function TypewriterHeading({ lines, speed = 45, startDelay = 150 
       }, speed);
     }, startDelay);
     return () => {
-      cancelled = true;
       clearTimeout(startTimer);
+      if (interval !== undefined) clearInterval(interval);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
