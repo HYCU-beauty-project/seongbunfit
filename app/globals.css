@@ -1,6 +1,5 @@
-/* 본문: Pretendard (가변 폰트, 눈누 공식 배포처) — @import는 다른 규칙보다 먼저 와야 해서
-   tailwindcss import보다 위에 둬요. */
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+/* 본문 폰트(Pretendard)는 layout.tsx에서 <link>로 로드해요 — CSS @import로 넣으면
+   "HTML → globals.css → CDN CSS → 폰트" 3단 체인이 생겨 첫 렌더가 늦어져요. */
 
 @import "tailwindcss";
 

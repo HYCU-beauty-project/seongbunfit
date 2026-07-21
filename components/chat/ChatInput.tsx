@@ -1,12 +1,10 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import ArrowRightIcon from '@/components/ArrowRightIcon';
 
 interface Props {
-    value: string;
-    onChange: (value: string) => void;
-    onSubmit: () => void;
+    onSubmit: (text: string) => void;
     placeholder?: string;
     disabled?: boolean;
     // 입력창 왼쪽에 붙는 버튼 자리예요(예: 모바일의 "+" 메뉴 버튼).
@@ -17,24 +15,29 @@ interface Props {
 }
 
 export default function ChatInput({
-    value,
-    onChange,
     onSubmit,
     placeholder = '피부 고민을 입력해주세요.',
     disabled,
     leading,
 }: Props) {
+    // 입력 중인 텍스트는 이 컴포넌트 안에만 둬요 — 부모(ChatWindow)가 들고 있으면
+    // 키 하나 칠 때마다 채팅 메시지 전체가 리렌더돼요.
+    const [value, setValue] = useState('');
+
     return (
         <form
             className="flex items-center gap-2 border-t border-[var(--color-border)] px-4 py-3.5"
             onSubmit={(e) => {
                 e.preventDefault();
-                onSubmit();
+                const text = value.trim();
+                if (!text || disabled) return;
+                onSubmit(text);
+                setValue('');
             }}>
             {leading}
             <input
                 value={value}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={(e) => setValue(e.target.value)}
                 placeholder={placeholder}
                 disabled={disabled}
                 maxLength={500}

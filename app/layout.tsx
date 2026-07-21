@@ -13,6 +13,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="h-full antialiased">
+      {/* Pretendard: 전체 가변 폰트(~2MB) 대신 dynamic subset — 화면에 실제로 쓰인
+          글자 구간(unicode-range)만 조각으로 내려받아 첫 렌더가 훨씬 빨라요.
+          Gmarket Sans(@font-face, globals.css)도 같은 CDN이라 preconnect를 공유해요. */}
+      <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+      <link
+        rel="stylesheet"
+        precedence="default"
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+      />
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

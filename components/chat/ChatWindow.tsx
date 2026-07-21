@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { categories, getCategory, getIngredientInCategory } from '@/lib/ingredients';
 import { budgetOptions, getBudget, parseBudgetText } from '@/lib/budgets';
@@ -50,6 +50,22 @@ function makeId() {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// useLocalStorage의 initialValue로 인라인 []를 넘기면 렌더마다 새 배열이라
+// 내부 useMemo가 매번 다시 계산돼요 — 모듈 상수로 참조를 고정해요.
+const initialCompareItems: CompareItem[] = [];
+const initialFavoriteItems: FavoriteItem[] = [];
+const EMPTY_IDS: string[] = [];
+
+// 항상 같은 함수 참조를 유지하면서 최신 구현을 호출해요 — memo된 MessageBubble에
+// 넘기는 핸들러 참조가 렌더마다 바뀌어 memo가 무력화되는 걸 막아줘요.
+function useStableCallback<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => R {
+    const ref = useRef(fn);
+    useEffect(() => {
+        ref.current = fn;
+    });
+    return useCallback((...args: A) => ref.current(...args), []);
+}
+
 interface ChatWindowProps {
     // /mobile 페이지는 480px짜리 컨테이너 안에 있어도, 실제 브라우저 창이 넓으면(예: 데스크톱에서
     // 개발자도구 없이 그냥 열었을 때) md: 기준이 "진짜 뷰포트 너비"로 판단돼서 2단 레이아웃이
@@ -64,7 +80,6 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         'ingredientfit:conditions',
         initialConditions,
     );
-    const [draft, setDraft] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [showScoreExplainer, setShowScoreExplainer] = useState(false);
     const [showCompareModal, setShowCompareModal] = useState(false);
@@ -75,11 +90,11 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
     const [previewIngredientId, setPreviewIngredientId] = useState<string | null>(null);
     const [compareItems, setCompareItems, compareHydrated] = useLocalStorage<CompareItem[]>(
         'ingredientfit:compare',
-        [],
+        initialCompareItems,
     );
     const [favoriteItems, setFavoriteItems, favoriteHydrated] = useLocalStorage<FavoriteItem[]>(
         'ingredientfit:favorites',
-        [],
+        initialFavoriteItems,
     );
     const scrollRef = useRef<HTMLDivElement>(null);
     const headerConditionsRef = useRef<HTMLDivElement>(null);
@@ -163,7 +178,6 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
 
     async function handleConcernInput(text: string) {
         pushUser(text);
-        setDraft('');
         setIsTyping(true);
         try {
             const res = await fetch('/api/chat', {
@@ -309,8 +323,8 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         }
     }
 
-    async function handleSubmit() {
-        const text = draft.trim();
+    async function handleSubmit(rawText: string) {
+        const text = rawText.trim();
         if (!text || isTyping) return;
 
         if (step === 'concern') {
@@ -322,7 +336,6 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
             const category = getCategory(conditions.categoryKey!);
             const matched = category.ingredients.find((i) => text.includes(i.name));
             if (matched) {
-                setDraft('');
                 handleIngredientSelect(category.key, matched.id, matched.name);
                 return;
             }
@@ -330,7 +343,6 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
             const switched = await tryHandleTopicSwitch(text);
             if (!switched) {
                 pushUser(text);
-                setDraft('');
                 pushAiText('아래 카드 중에서 관심 있는 성분을 선택해주세요 🙂');
             }
             return;
@@ -339,7 +351,6 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         if (step === 'budget') {
             const parsed = parseBudgetText(text);
             if (parsed) {
-                setDraft('');
                 handleBudgetSelect(parsed.id);
                 return;
             }
@@ -347,7 +358,6 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
             const switched = await tryHandleTopicSwitch(text);
             if (!switched) {
                 pushUser(text);
-                setDraft('');
                 pushAiText("예산 범위를 버튼으로 선택하거나 '1만원', '2만원대'처럼 입력해 주세요.");
             }
             return;
@@ -372,7 +382,6 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
             if (!res.ok) return false;
             const data = await res.json();
             if (data.categoryKey && !data.clarifyingQuestion) {
-                setDraft('');
                 pushUser(text);
                 setConditions(initialConditions);
                 applyConcernApiResponse(data);
@@ -432,13 +441,18 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
     }
 
     function handleToggleCompare(product: ScoredProduct, ingredientName: string, categoryLabel: string) {
+        // 초과 여부는 렌더 시점 state가 아니라 updater가 실제로 본 prev 기준으로 판정해요.
+        let overflowed = false;
         setCompareItems((prev) => {
             const exists = prev.some((item) => item.id === product.id);
             if (exists) return prev.filter((item) => item.id !== product.id);
-            if (prev.length >= MAX_COMPARE_ITEMS) return prev;
+            if (prev.length >= MAX_COMPARE_ITEMS) {
+                overflowed = true;
+                return prev;
+            }
             return [...prev, { id: product.id, product, ingredientName, categoryLabel, addedAt: Date.now() }];
         });
-        if (!compareItems.some((item) => item.id === product.id) && compareItems.length >= MAX_COMPARE_ITEMS) {
+        if (overflowed) {
             pushAiText(`비교함은 최대 ${MAX_COMPARE_ITEMS}개까지 담을 수 있어요. 하나를 빼고 다시 담아주세요.`);
         }
     }
@@ -488,6 +502,20 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         }
         return undefined;
     }, [messages]);
+
+    // memo된 MessageBubble이 실제로 효과를 내려면 넘기는 props의 참조가 안정적이어야
+    // 해요. 핸들러는 useStableCallback으로 참조를 고정하고, id 배열은 원본이 바뀔
+    // 때만 새로 만들어요.
+    const stableToggleCompare = useStableCallback(handleToggleCompare);
+    const stableToggleFavorite = useStableCallback(handleToggleFavorite);
+    const stableIngredientSelect = useStableCallback(handleIngredientSelect);
+    const stableBudgetSelect = useStableCallback(handleBudgetSelect);
+    const stableCategoryChip = useStableCallback((key: CategoryKey) => {
+        const c = getCategory(key);
+        handleConcernInput(`${c.label} 고민이에요`);
+    });
+    const compareIds = useMemo(() => compareItems.map((item) => item.id), [compareItems]);
+    const favoriteIds = useMemo(() => favoriteItems.map((item) => item.id), [favoriteItems]);
 
     const showSidePanel = step !== 'concern';
 
@@ -551,22 +579,34 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                                     <div
                                         key={message.id}
                                         ref={message.id === lastMessageId ? lastMessageRef : undefined}>
+                                        {/* previewIngredientId(마우스오버)와 compare/favorite id 목록은 각각
+                                            ingredients/result 메시지만 실제로 쓰기 때문에, 해당 종류가 아니면
+                                            고정값을 넘겨서 마우스오버·담기 때 다른 말풍선이 리렌더되지 않게 해요. */}
                                         <MessageBubble
                                             message={message}
                                             showChips={message.id === lastMessageId && step === 'concern'}
-                                            previewIngredientId={previewIngredientId}
+                                            previewIngredientId={
+                                                message.role === 'ai' && message.kind === 'ingredients'
+                                                    ? previewIngredientId
+                                                    : null
+                                            }
                                             onIngredientPreview={setPreviewIngredientId}
-                                            compareIds={compareItems.map((item) => item.id)}
-                                            onToggleCompare={handleToggleCompare}
-                                            favoriteIds={favoriteItems.map((item) => item.id)}
-                                            onToggleFavorite={handleToggleFavorite}
+                                            compareIds={
+                                                message.role === 'ai' && message.kind === 'result'
+                                                    ? compareIds
+                                                    : EMPTY_IDS
+                                            }
+                                            onToggleCompare={stableToggleCompare}
+                                            favoriteIds={
+                                                message.role === 'ai' && message.kind === 'result'
+                                                    ? favoriteIds
+                                                    : EMPTY_IDS
+                                            }
+                                            onToggleFavorite={stableToggleFavorite}
                                             forceStacked={forceStacked}
-                                            onCategoryChip={(key) => {
-                                                const c = getCategory(key);
-                                                handleConcernInput(`${c.label} 고민이에요`);
-                                            }}
-                                            onIngredientSelect={handleIngredientSelect}
-                                            onBudgetChip={handleBudgetSelect}
+                                            onCategoryChip={stableCategoryChip}
+                                            onIngredientSelect={stableIngredientSelect}
+                                            onBudgetChip={stableBudgetSelect}
                                             disabled={isTyping}
                                         />
                                     </div>
@@ -577,8 +617,6 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                     </div>
 
                     <ChatInput
-                        value={draft}
-                        onChange={setDraft}
                         onSubmit={handleSubmit}
                         disabled={isTyping}
                         leading={
@@ -727,7 +765,9 @@ function TypingBubble() {
     );
 }
 
-function MessageBubble({
+// memo: 키 입력·마우스오버로 ChatWindow가 리렌더돼도, props가 그대로인 기존
+// 말풍선(확정된 메시지들)은 다시 그리지 않아요. 대화가 길어질수록 효과가 커져요.
+const MessageBubble = memo(function MessageBubble({
     message,
     showChips,
     previewIngredientId,
@@ -928,4 +968,4 @@ function MessageBubble({
             </div>
         </div>
     );
-}
+});

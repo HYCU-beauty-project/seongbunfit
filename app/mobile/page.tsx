@@ -43,6 +43,8 @@ export default function MobileHomePage() {
                         alt=""
                         fill
                         priority
+                        sizes="100vw"
+                        quality={45}
                         className="scale-125 object-cover object-center blur-[2px] brightness-[0.6]"
                         aria-hidden
                     />
