@@ -35,8 +35,10 @@ export async function generateReason(product: ScoredProduct, ingredient: Ingredi
   for (const model of [MODEL, FALLBACK_MODEL]) {
     try {
       // 키를 쿼리스트링에 넣으면 프록시·로그에 남을 수 있어서 헤더로 보내요(Google 권장).
+      // 8초 안에 응답이 없으면 끊고 템플릿 추천 이유로 폴백해요.
       const response = await fetch(geminiUrl(model), {
         method: "POST",
+        signal: AbortSignal.timeout(8000),
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },

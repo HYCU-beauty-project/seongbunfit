@@ -71,8 +71,11 @@ function geminiUrl(model: string): string {
 
 async function callGemini(model: string, apiKey: string, userText: string) {
   // 키를 쿼리스트링에 넣으면 프록시·로그에 남을 수 있어서 헤더로 보내요(Google 권장).
+  // 타임아웃이 없으면 Gemini가 응답을 물고 있을 때 함수 한도까지 통째로 매달려요.
+  // 8초 안에 안 오면 끊고 키워드 매칭 폴백으로 빠르게 넘어가요.
   const response = await fetch(geminiUrl(model), {
     method: "POST",
+    signal: AbortSignal.timeout(8000),
     headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
     body: JSON.stringify({
       system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
