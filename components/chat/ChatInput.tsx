@@ -37,6 +37,7 @@ export default function ChatInput({
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
                 disabled={disabled}
+                maxLength={500}
                 className="min-w-0 flex-1 rounded-lg border border-[var(--color-border)] px-3.5 py-2.5 text-[13px] text-[var(--color-ink)] placeholder:text-[var(--color-ink-faint)] outline-none focus:border-[var(--color-primary)] transition-colors disabled:opacity-60"
             />
             <button

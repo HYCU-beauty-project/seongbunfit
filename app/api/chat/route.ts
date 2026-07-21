@@ -4,6 +4,11 @@ import { generateIntro } from "@/lib/gemini/intro";
 import { getCategory } from "@/lib/ingredients";
 import { applySafetyAdjustment } from "@/lib/safety";
 import { mockLatency } from "@/lib/mockLatency";
+import { getClientIp, isRateLimited } from "@/lib/rateLimit";
+
+// 사용자 고민 문장의 최대 길이. 이보다 길면 정상 입력이 아니라 프롬프트 크기를
+// 부풀리는 남용에 가까워서(토큰 비용·지연 증폭) 서버에서 거절해요.
+const MAX_TEXT_LENGTH = 500;
 
 /**
  * POST /api/chat — 피부 고민 텍스트를 받아 카테고리를 분류하고 성분 목록을 돌려줘요.
@@ -19,12 +24,26 @@ import { mockLatency } from "@/lib/mockLatency";
  */
 export async function POST(req: NextRequest) {
   try {
+    if (isRateLimited(getClientIp(req))) {
+      return NextResponse.json(
+        { error: "요청이 너무 잦아요. 잠시 후 다시 시도해 주세요." },
+        { status: 429 },
+      );
+    }
+
     await mockLatency();
-    const body = await req.json();
+    // 본문이 JSON이 아니면 500이 아니라 400으로 응답해요.
+    const body = await req.json().catch(() => null);
     const text = typeof body?.text === "string" ? body.text : "";
 
     if (!text.trim()) {
       return NextResponse.json({ error: "text가 비어있어요." }, { status: 400 });
+    }
+    if (text.length > MAX_TEXT_LENGTH) {
+      return NextResponse.json(
+        { error: `고민은 ${MAX_TEXT_LENGTH}자 이내로 입력해 주세요.` },
+        { status: 400 },
+      );
     }
 
     const { categoryKey, usedAi, clarifyingQuestion } = await analyzeSkinConcern(text);

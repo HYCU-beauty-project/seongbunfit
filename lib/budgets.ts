@@ -11,6 +11,11 @@ export function getBudget(id: string): BudgetOption {
   return budgetOptions.find((b) => b.id === id) ?? budgetOptions[1];
 }
 
+// API 입력 검증용 — 미지의 id를 조용히 "1~2만원"으로 바꾸지 않고 undefined를 돌려줘요.
+export function findBudget(id: string): BudgetOption | undefined {
+  return budgetOptions.find((b) => b.id === id);
+}
+
 // 자유 텍스트 예산 입력 파싱 (예: "15000원", "1.5만원", "2만원대")
 export function parseBudgetText(input: string): BudgetOption | null {
   const digits = input.replace(/[,\s]/g, "");

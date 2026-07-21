@@ -32,9 +32,10 @@ export async function generateIntro(userText: string, category: Category): Promi
 
   for (const model of [MODEL, FALLBACK_MODEL]) {
     try {
-      const response = await fetch(`${geminiUrl(model)}?key=${apiKey}`, {
+      // 키를 쿼리스트링에 넣으면 프록시·로그에 남을 수 있어서 헤더로 보내요(Google 권장).
+      const response = await fetch(geminiUrl(model), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents: [{ role: "user", parts: [{ text: prompt }] }],

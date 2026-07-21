@@ -74,6 +74,44 @@ create table skin_analyses (
 create index idx_skin_analyses_user on skin_analyses(user_id);
 
 -- ============================================================================
+-- 5. Row Level Security (RLS)
+-- ============================================================================
+-- anon key는 NEXT_PUBLIC_ 환경변수라서 브라우저에 그대로 노출돼요. RLS가 없으면
+-- 그 키만으로 누구나 모든 테이블을 읽고 "쓰고 지울 수" 있기 때문에, 테이블을 만들
+-- 때 반드시 아래 정책을 같이 적용해야 해요.
+--
+-- 원칙:
+--  - 카탈로그 테이블(ingredients/products/product_ingredients): 누구나 읽기만 가능.
+--    쓰기 정책을 아예 만들지 않으면 anon/authenticated의 insert/update/delete는
+--    전부 거부돼요. 데이터 입력은 service role 키(RLS 우회, 서버 전용)로만 해요.
+--  - skin_analyses: 본인(auth.uid() = user_id) 기록만 조회/저장 가능.
+
+alter table ingredients enable row level security;
+alter table products enable row level security;
+alter table product_ingredients enable row level security;
+alter table skin_analyses enable row level security;
+
+create policy "ingredients_public_read"
+  on ingredients for select
+  using (true);
+
+create policy "products_public_read"
+  on products for select
+  using (true);
+
+create policy "product_ingredients_public_read"
+  on product_ingredients for select
+  using (true);
+
+create policy "skin_analyses_owner_select"
+  on skin_analyses for select
+  using (auth.uid() = user_id);
+
+create policy "skin_analyses_owner_insert"
+  on skin_analyses for insert
+  with check (auth.uid() = user_id);
+
+-- ============================================================================
 -- 조회 시 자주 쓰게 될 쿼리 예시 (lib/scoring/calculator.ts의 scoreProducts()가
 -- 지금 더미 데이터로 하는 일을 Supabase 버전으로 옮기면 이런 모양이 돼요)
 -- ============================================================================

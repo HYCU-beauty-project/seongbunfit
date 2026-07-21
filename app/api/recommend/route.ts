@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getIngredient } from '@/lib/ingredients';
-import { getBudget } from '@/lib/budgets';
+import { findBudget } from '@/lib/budgets';
 import { getTop3 } from '@/lib/scoring/calculator';
 import { generateReason } from '@/lib/gemini/reasoning';
 import { mockLatency } from '@/lib/mockLatency';
+import { getClientIp, isRateLimited } from '@/lib/rateLimit';
 
 /**
  * POST /api/recommend — 성분+예산을 받아 가성비 TOP3 제품을 계산해서 돌려줘요.
@@ -16,8 +17,16 @@ import { mockLatency } from '@/lib/mockLatency';
  */
 export async function POST(req: NextRequest) {
     try {
+        if (isRateLimited(getClientIp(req))) {
+            return NextResponse.json(
+                { error: '요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.' },
+                { status: 429 },
+            );
+        }
+
         await mockLatency();
-        const body = await req.json();
+        // 본문이 JSON이 아니면 500이 아니라 400으로 응답해요.
+        const body = await req.json().catch(() => null);
         const ingredientId = typeof body?.ingredientId === 'string' ? body.ingredientId : '';
         const budgetId = typeof body?.budgetId === 'string' ? body.budgetId : '';
 
@@ -25,7 +34,11 @@ export async function POST(req: NextRequest) {
         if (!ingredient) {
             return NextResponse.json({ error: '존재하지 않는 성분이에요.' }, { status: 400 });
         }
-        const budget = getBudget(budgetId);
+        // 미지의 budgetId를 조용히 기본 예산으로 바꾸면 틀린 결과가 200으로 나가요.
+        const budget = findBudget(budgetId);
+        if (!budget) {
+            return NextResponse.json({ error: '존재하지 않는 예산 범위예요.' }, { status: 400 });
+        }
 
         // TODO(Supabase 연동 시): getTop3는 현재 lib/products.ts 더미 데이터를 사용합니다.
         // Supabase 연동 후에는 product_ingredients 테이블에서 candidates를 조회해

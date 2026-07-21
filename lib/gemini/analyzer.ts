@@ -70,9 +70,10 @@ function geminiUrl(model: string): string {
 }
 
 async function callGemini(model: string, apiKey: string, userText: string) {
-  const response = await fetch(`${geminiUrl(model)}?key=${apiKey}`, {
+  // 키를 쿼리스트링에 넣으면 프록시·로그에 남을 수 있어서 헤더로 보내요(Google 권장).
+  const response = await fetch(geminiUrl(model), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
     body: JSON.stringify({
       system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
       contents: [{ role: "user", parts: [{ text: userText }] }],
@@ -120,7 +121,7 @@ export async function analyzeSkinConcern(userText: string): Promise<AnalyzeResul
     return { categoryKey: matchCategory(userText)?.key ?? null, usedAi: false };
   }
 
-  console.log(`[gemini analyzer] 키 감지됨 (${apiKey.slice(0, 6)}...${apiKey.slice(-4)}), ${PRIMARY_MODEL} 호출 중…`);
+  console.log(`[gemini analyzer] 키 감지됨, ${PRIMARY_MODEL} 호출 중…`);
 
   for (const model of [PRIMARY_MODEL, FALLBACK_MODEL]) {
     try {
