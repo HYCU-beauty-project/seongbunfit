@@ -263,6 +263,7 @@ flowchart LR
 | **Data** | 더미 데이터 (프로토타입) → Supabase PostgreSQL (스키마·RLS 준비 완료) |
 | **저장소** | `localStorage` (대화·비교함·즐겨찾기 — 로그인 없이 동작) |
 | **기타** | `html-to-image` (카드 캡처), UA 기반 모바일 리다이렉트 (`middleware.ts`) |
+| **의존성** | 런타임 5개뿐 (`next` · `react` · `react-dom` · `@supabase/supabase-js` · `html-to-image`) |
 
 ---
 
@@ -292,7 +293,8 @@ seongbunfit/
 │   ├── chat/                      AI 채팅 추천
 │   ├── products/                  제품 탐색 (검색·필터·정렬)
 │   ├── faq/ · notice/ · terms/ · contact/ · event/ · face-analysis/
-│   ├── mobile/                    📱 모바일 전용 페이지 트리 (같은 디자인 토큰)
+│   ├── mobile/                    📱 모바일 전용 트리 (위 페이지들과 1:1 대응)
+│   ├── globals.css                디자인 토큰 + 애니메이션 (웹·모바일 공용)
 │   └── api/
 │       ├── chat/route.ts          분류 API (레이트리밋·입력검증)
 │       └── recommend/route.ts     추천 API
@@ -300,6 +302,9 @@ seongbunfit/
 ├── 🧩 components/
 │   ├── chat/                      ChatWindow · IngredientCard · ResultCarousel
 │   │                              CompareModal · FavoritesModal · ScoreExplainer …
+│   ├── product/                   ResultCard · ProductDetailModal
+│   ├── mobile/                    MobileHeader · MobileDrawer
+│   ├── ui/                        Button · Modal
 │   ├── ScoreBar.tsx · ScoreDonut.tsx   공용 점수 시각화
 │   └── …                          랜딩/공용 컴포넌트
 │
@@ -313,6 +318,11 @@ seongbunfit/
 │   ├── useLocalStorage.ts         useSyncExternalStore 기반 저장 훅
 │   └── supabase/                  client.ts · schema.sql (RLS 포함)
 │
+├── 🖼️ public/
+│   ├── icons/                     서비스 4단계 아이콘 (StepIcon이 동적 로드)
+│   ├── images/                    히어로 배경 · 제품 플레이스홀더
+│   └── logo/                      logo_color.png
+│
 ├── 🔬 scripts/
 │   └── consistency-check.mjs      AI 분류 일관성 검증 (npm run consistency)
 │
@@ -323,6 +333,10 @@ seongbunfit/
 ```
 
 </details>
+
+> 🧹 미사용 컴포넌트·자산·의존성은 정리된 상태입니다. 런타임 의존성은
+> **`next` · `react` · `react-dom` · `@supabase/supabase-js` · `html-to-image` 5개**뿐이라
+> `npm install`이 가볍고, `public/` 에도 실제 화면에 쓰이는 파일만 남아 있어요.
 
 ---
 
