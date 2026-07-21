@@ -5,8 +5,8 @@ export interface AnalyzeResult {
   // null = 5개 피부 고민 카테고리 중 어디에도 해당하지 않는 질문으로 판단됨
   categoryKey: CategoryKey | null;
   usedAi: boolean;
-  // 값이 있으면: 분류하기엔 너무 모호해서 AI가 되물어봐야 하는 상황이에요.
-  // 이 경우 categoryKey는 항상 null이에요.
+  // 값이 있으면 분류하기엔 너무 모호해서 AI가 되물어봐야 하는 상황.
+  // 이 경우 categoryKey는 항상 null임
   clarifyingQuestion?: string;
 }
 
@@ -52,15 +52,15 @@ clarify: <질문 한 문장>
 반드시 다음 중 하나의 형식으로만 답하세요: 카테고리 key(wrinkle/brightening/hydration/pore/texture),
 "unsupported", 또는 "clarify: 질문". 다른 설명은 절대 붙이지 마세요.`;
 
-// 무료 티어에서 쓸 수 있는 가벼운 분류 작업이라, Gemini 3 라인업 중 가장 가볍고 저렴한
-// 모델이면 충분해요. gemini-2.5-flash는 2026년 7월 9일부터 신규 요청에 404를 반환하기
-// 시작해서(공식 지원 종료 예정일 이전에 조기 중단된 사례) gemini-3.1-flash-lite로 바꿨어요.
-// 모델명이 또 바뀌면 여기 하나만 고치면 됩니다 — 최신 목록은
-// https://ai.google.dev/gemini-api/docs/models 에서 "Stable" 표시된 모델을 확인하세요.
+// 무료 티어로 되는 가벼운 분류 작업이라 Gemini 3 라인업 중 가장 가볍고 저렴한
+// 모델이면 충분. gemini-2.5-flash는 2026년 7월 9일부터 신규 요청에 404 뱉기
+// 시작해서(공식 지원 종료 예정일 전에 조기 중단된 케이스) gemini-3.1-flash-lite로 바꿈.
+// 모델명 또 바뀌면 여기 하나만 고치면 됨. 최신 목록은
+// https://ai.google.dev/gemini-api/docs/models 에서 "Stable" 표시된 모델 확인
 const PRIMARY_MODEL = "gemini-3.1-flash-lite";
 
-// Google이 계속 유지해주는 "최신 안정 모델" 별칭이에요. PRIMARY_MODEL이 또 조기 중단되는
-// 사고가 나더라도(이번처럼) 자동으로 여기로 한 번 더 시도해서 서비스가 안 끊기게 해줘요.
+// Google이 계속 유지해주는 "최신 안정 모델" 별칭. PRIMARY_MODEL이 또 조기 중단되는
+// 사고 나도(이번처럼) 자동으로 여기로 한 번 더 시도해서 서비스 안 끊기게 함
 const FALLBACK_MODEL = "gemini-flash-latest";
 
 const UNSUPPORTED = "unsupported";
@@ -70,9 +70,9 @@ function geminiUrl(model: string): string {
 }
 
 async function callGemini(model: string, apiKey: string, userText: string) {
-  // 키를 쿼리스트링에 넣으면 프록시·로그에 남을 수 있어서 헤더로 보내요(Google 권장).
-  // 타임아웃이 없으면 Gemini가 응답을 물고 있을 때 함수 한도까지 통째로 매달려요.
-  // 8초 안에 안 오면 끊고 키워드 매칭 폴백으로 빠르게 넘어가요.
+  // 키를 쿼리스트링에 넣으면 프록시·로그에 남을 수 있어서 헤더로 보냄(Google 권장).
+  // 타임아웃 없으면 Gemini가 응답 물고 있을 때 함수 한도까지 통째로 매달림.
+  // 8초 안에 안 오면 끊고 키워드 매칭 폴백으로 넘어감
   const response = await fetch(geminiUrl(model), {
     method: "POST",
     signal: AbortSignal.timeout(8000),
@@ -102,16 +102,16 @@ async function callGemini(model: string, apiKey: string, userText: string) {
 }
 
 /**
- * 사용자의 자연어 피부 고민을 5개 카테고리 중 하나로 분류합니다.
- * GEMINI_API_KEY가 설정되어 있으면 Gemini로 분석하고,
- * 없으면 키워드 매칭(lib/ingredients.ts matchCategory)으로 폴백합니다.
+ * 사용자의 자연어 피부 고민을 5개 카테고리 중 하나로 분류함.
+ * GEMINI_API_KEY 있으면 Gemini로 분석, 없으면 키워드 매칭
+ * (lib/ingredients.ts matchCategory)으로 폴백
  *
- * 관련 없는 문장("안녕", "오늘 날씨 어때" 등)은 categoryKey: null로 반환합니다.
- * 예전엔 이런 경우에도 강제로 카테고리 하나를 골라 보여줬는데, "안녕"에도
- * "주름 고민이시군요!"라고 확신에 차서 틀린 답을 하는 문제가 있었어요.
+ * 관련 없는 문장("안녕", "오늘 날씨 어때" 등)은 categoryKey: null로 반환.
+ * 예전엔 이런 경우에도 강제로 카테고리 하나 골라 보여줬는데, "안녕"에도
+ * "주름 고민이시군요!"라고 확신에 차서 틀리는 문제 있어서 바꿈
  *
- * LangChain 연동 시: 이 함수를 체인의 첫 단계(입력 분석)로 사용하고,
- * 이어서 DB 조회 -> 가성비 스코어링(lib/scoring/calculator.ts) -> 결과 요약 순으로 연결하면 됩니다.
+ * LangChain 연동 시 이 함수를 체인 첫 단계(입력 분석)로 쓰고,
+ * DB 조회 -> 가성비 스코어링(lib/scoring/calculator.ts) -> 결과 요약 순으로 연결하면 됨
  */
 export async function analyzeSkinConcern(userText: string): Promise<AnalyzeResult> {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -136,8 +136,8 @@ export async function analyzeSkinConcern(userText: string): Promise<AnalyzeResul
 
       if (cleaned.startsWith("clarify")) {
         const question = raw.replace(/^clarify:?\s*/i, "").trim();
-        // 되물음 문장이 토큰 한도로 중간에 잘렸으면, 어색하게 끊긴 질문을 보여주는 대신
-        // 안전하게 키워드 매칭 폴백으로 넘어가요.
+        // 되물음 문장이 토큰 한도로 중간에 잘렸으면 어색하게 끊긴 질문
+        // 보여주는 대신 안전하게 키워드 매칭 폴백으로 넘어감
         if (question && !truncated) {
           console.log(`[gemini analyzer] ✅ ${model} 사용됨 — "${userText}" → 되물음: "${question}"`);
           return { categoryKey: null, usedAi: true, clarifyingQuestion: question };

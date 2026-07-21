@@ -14,12 +14,12 @@ export interface Ingredient {
   caution: string;
   goodFor: string;
   recommended?: boolean;
-  // 자극/각질제거 성분(살리실산, 레티놀 등) — 이미 피부가 자극된 상태일 땐
-  // 이 성분을 1순위로 추천하면 안 돼요. lib/safety.ts에서 이 값을 보고 순위를 조정해요.
+  // 자극/각질제거 성분(살리실산, 레티놀 등). 이미 자극된 피부엔 1순위 추천하면
+  // 안 되는 성분. lib/safety.ts에서 이 값 보고 순위 조정함
   irritant?: boolean;
-  // 임신·수유 중에는 사용이 권장되지 않는 성분(레티놀=비타민A 유도체 등).
-  // lib/safety.ts에서 사용자가 임신·수유를 언급하면 이 값을 가진 성분을 추천에서
-  // 강제로 제외해요 — 카테고리 분류 결과와 무관하게 항상 적용되는 안전장치예요.
+  // 임신·수유 중 비권장 성분(레티놀=비타민A 유도체 등).
+  // lib/safety.ts에서 임신·수유 언급 감지되면 이 값 가진 성분 강제 제외.
+  // 카테고리 분류 결과와 무관하게 항상 적용되는 안전장치임
   pregnancyUnsafe?: boolean;
 }
 
@@ -83,8 +83,8 @@ export interface AiIngredientsMessage {
   kind: "ingredients";
   categoryKey: CategoryKey;
   intro?: string;
-  // 서버에서 안전 조정(자극 성분 순위 내림)이 적용된 실제 성분 목록이에요.
-  // 없으면(예전 대화 기록) categoryKey로 정적 데이터를 다시 조회해서 폴백해요.
+  // 서버에서 안전 조정(자극 성분 순위 내림) 적용된 실제 성분 목록.
+  // 없으면(예전 대화 기록) categoryKey로 정적 데이터 다시 조회해서 폴백
   ingredients?: Ingredient[];
   safetyNotice?: string;
   usedAi?: boolean;
@@ -141,7 +141,7 @@ export interface CompareItem {
   addedAt: number;
 }
 
-// 즐겨찾기에 담긴 항목 (구조는 비교함과 동일하되, 목적이 달라 별도 타입으로 분리했어요)
+// 즐겨찾기에 담긴 항목. 구조는 비교함과 같은데 목적이 달라서 타입 분리함
 export interface FavoriteItem {
   id: string; // = product.id (유니크)
   product: ScoredProduct;

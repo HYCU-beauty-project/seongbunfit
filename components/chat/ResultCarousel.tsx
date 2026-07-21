@@ -11,11 +11,11 @@ interface Props {
     onToggleCompare: (product: ScoredProduct) => void;
     favoriteIds?: string[];
     onToggleFavorite?: (product: ScoredProduct) => void;
-    // true면(모바일) 카드가 요약만 보여주고 상세는 바텀시트로 펼쳐요.
+    // true면(모바일) 카드는 요약만, 상세는 바텀시트로 펼침
     compact?: boolean;
-    // 한 화면에 보여줄 카드 개수예요. 모바일(좁은 채팅창)에선 1을 줘서 카드 하나가
-    // 풀와이드로 슬라이드되게 하고, 데스크톱(넓은 채팅창)에선 2를 줘서 "2개는 바로
-    // 보이고, 슬라이드하면 3번째가 나오는" 느낌을 줘요.
+    // 한 화면에 보여줄 카드 개수. 모바일(좁은 채팅창)은 1 줘서 카드 하나
+    // 풀와이드 슬라이드, 데스크톱(넓은 채팅창)은 2 줘서 2개 바로 보이고
+    // 슬라이드하면 3번째 나오는 느낌
     cardsPerView?: 1 | 2;
 }
 
@@ -30,15 +30,15 @@ export default function ResultCarousel({
     cardsPerView = 1,
 }: Props) {
     const trackRef = useRef<HTMLDivElement>(null);
-    // ⚠️ 예전에는 "카드 너비 × 인덱스"로 스크롤 위치를 계산했는데, 렌더링 타이밍에
-    // 따라 clientWidth가 아주 살짝 어긋나서 마지막 카드 오른쪽 테두리가 미세하게
-    // 잘려 보이는 문제가 있었어요. 그래서 각 카드 DOM의 실제 위치를 직접 측정해서
-    // 스크롤하는 방식으로 바꿨어요 — 계산에 의존하지 않으니 오차가 안 생겨요.
+    // 예전엔 "카드 너비 × 인덱스"로 스크롤 위치 계산했는데 렌더링 타이밍 따라
+    // clientWidth가 살짝 어긋나서 마지막 카드 오른쪽 테두리 미세하게 잘리는
+    // 버그 있었음. 그래서 각 카드 DOM 실제 위치 직접 측정해서 스크롤하게 바꿈.
+    // 계산에 의존 안 하니 오차 안 생김
     const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
     const [activeIndex, setActiveIndex] = useState(0);
 
-    // 카드 개수가 한 화면에 다 들어가면(cardsPerView 이하) 화살표/점 없이 그냥
-    // 나란히 보여주고, 그보다 많을 때만 캐러셀 내비게이션을 보여줘요.
+    // 카드가 한 화면에 다 들어가면(cardsPerView 이하) 화살표/점 없이 나란히,
+    // 그보다 많을 때만 캐러셀 내비게이션 표시
     const needsScroll = results.length > cardsPerView;
     const maxIndex = Math.max(0, results.length - cardsPerView);
 
@@ -60,8 +60,8 @@ export default function ResultCarousel({
         const track = trackRef.current;
         if (!track) return;
 
-        // 지금 스크롤 위치에서 트랙의 왼쪽 경계에 가장 가까운 카드를 찾아서
-        // 그 카드를 "현재 보고 있는 카드"로 표시해요(점 인디케이터용).
+        // 지금 스크롤 위치에서 트랙 왼쪽 경계에 가장 가까운 카드 찾아서
+        // "현재 보고 있는 카드"로 표시 (점 인디케이터용)
         const trackRect = track.getBoundingClientRect();
         let closestIdx = 0;
         let closestDist = Infinity;
@@ -76,21 +76,20 @@ export default function ResultCarousel({
         setActiveIndex(Math.max(0, Math.min(maxIndex, closestIdx)));
     }
 
-    // ⚠️ cardsPerView 비율만큼 폭을 주는 걸 Tailwind의 basis-*(flex-basis: %)로
-    // 했었는데, 이게 overflow-x:auto인 가로 스크롤 flex 컨테이너 안에서는 사파리(iOS)가
-    // 퍼센트 flex-basis를 컨테이너 폭이 아니라 내용물 크기 기준으로 잘못 계산하는 버그가
-    // 있어요. 크롬 데스크톱 기기 시뮬레이터는 이 버그가 재현되지 않아 카드 폭이
-    // 멀쩡해 보였지만, 실제 아이폰에서는 카드가 실제 필요한 폭보다 훨씬 좁게 찌그러져서
-    // 세로로 길고 내용이 몰려 보였어요. flex-basis 대신 width(%)를 직접 지정하면 이
-    // 버그를 피할 수 있어요.
+    // cardsPerView 비율 폭을 Tailwind basis-*(flex-basis: %)로 했었는데,
+    // overflow-x:auto 가로 스크롤 flex 컨테이너 안에서 사파리(iOS)가 퍼센트
+    // flex-basis를 컨테이너 폭이 아니라 내용물 크기 기준으로 잘못 계산하는 버그 있음.
+    // 크롬 데스크톱 시뮬레이터에선 재현 안 돼서 멀쩡해 보였는데 실제 아이폰에선
+    // 카드가 훨씬 좁게 찌그러져서 세로로 길어짐. flex-basis 대신 width(%) 직접
+    // 지정하면 이 버그 피할 수 있음
     const cardWidthClass = cardsPerView === 2 ? 'w-[calc(50%-5px)]' : 'w-full';
 
     return (
         <div>
-            {/* 화살표를 좌우 전용 칸으로 따로 뒀더니, 그 칸들이 차지하는 폭(왼쪽 화살표는
-          안 보일 때도 자리는 차지)만큼 카드가 좁아져 보였어요. 화살표를 트랙 위에
-          살짝 겹치는 오버레이로 바꿔서 그 폭을 카드에 돌려줬어요 — 화살표는 카드
-          중간 높이(점수 요약 박스 근처)에 떠서 아래쪽 버튼들과는 안 겹쳐요. */}
+            {/* 화살표를 좌우 전용 칸으로 뒀더니 그 칸 폭(안 보일 때도 자리 차지)만큼
+          카드가 좁아 보였음. 트랙 위에 살짝 겹치는 오버레이로 바꿔서 그 폭을
+          카드에 돌려줌. 화살표는 카드 중간 높이(점수 요약 박스 근처)에 떠서
+          아래쪽 버튼들과 안 겹침 */}
             <div className="relative">
                 <div
                     ref={trackRef}
@@ -115,10 +114,9 @@ export default function ResultCarousel({
                             />
                         </div>
                     ))}
-                    {/* 마지막 카드가 스크롤 가능 영역의 오른쪽 경계에 정확히 맞닿으면,
-                        둥근 모서리(rounded-xl)가 서브픽셀 단위로 잘려서 흐릿하게 보이는
-                        경우가 있어요. 스크롤 끝에 약간의 여백을 둬서 그 경계에서 살짝
-                        떨어지게 했어요. */}
+                    {/* 마지막 카드가 스크롤 영역 오른쪽 경계에 딱 맞닿으면 둥근
+                        모서리(rounded-xl)가 서브픽셀 단위로 잘려 흐릿해 보일 때 있음.
+                        스크롤 끝에 여백 살짝 둬서 경계에서 떨어지게 함 */}
                     <div className="w-2 shrink-0" aria-hidden />
                 </div>
 

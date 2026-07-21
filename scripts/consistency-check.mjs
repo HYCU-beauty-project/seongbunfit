@@ -1,9 +1,9 @@
 /**
  * AI 분류 일관성 검증 스크립트 (MVP)
  *
- * 같은 고민 문장을 여러 번 반복해서 /api/chat에 보내고, 분류 결과가 매번 같은지
- * (일치율 %)를 측정해요. 분류 단계는 temperature 0으로 고정되어 있어서(README의
- * "AI 분석 일관성 검증" 참고) 명확한 문장은 일치율 100%가 나와야 정상이에요.
+ * 같은 고민 문장을 /api/chat에 여러 번 보내서 분류 결과가 매번 같은지(일치율 %)
+ * 측정함. 분류 단계는 temperature 0 고정이라(README "AI 분석 일관성 검증" 참고)
+ * 명확한 문장은 일치율 100% 나와야 정상
  *
  * 사용법:
  *   npm run dev          # 별도 터미널에서 서버 먼저 실행
@@ -11,17 +11,17 @@
  *
  * 환경변수:
  *   BASE_URL  대상 서버 (기본 http://localhost:3000)
- *   REPEATS   문장당 반복 횟수 (기본 4 — 5문장 × 4회 = 총 20회로 분당 레이트리밋 한도 내)
+ *   REPEATS   문장당 반복 횟수 (기본 4. 5문장 × 4회 = 총 20회로 분당 레이트리밋 한도 내)
  */
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 const REPEATS = Number(process.env.REPEATS ?? 4);
-// 서버 레이트리밋(IP당 분당 20회)에 걸리지 않게 호출 사이에 잠깐 쉬어요.
+// 서버 레이트리밋(IP당 분당 20회) 안 걸리게 호출 사이에 잠깐 쉼
 const DELAY_MS = 500;
 
 // 카테고리별 대표 고민 4개 + 일부러 모호하게 쓴 문장 1개.
-// 모호한 문장은 특정 카테고리로 강제 분류되지 않고 되물음(clarify)이나
-// 미지원(unsupported)으로 "일관되게" 처리되는지를 봐요.
+// 모호한 문장은 특정 카테고리로 강제 분류 안 되고 되물음(clarify)이나
+// 미지원(unsupported)으로 "일관되게" 처리되는지 보는 용도
 const TEST_SENTENCES = [
   { label: "주름(명확)", text: "눈가 주름이 고민이에요" },
   { label: "미백(명확)", text: "기미랑 잡티 때문에 피부톤이 칙칙해요" },
@@ -34,7 +34,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// 응답을 "분류 결과" 하나로 요약해요. 카테고리 키 / clarify(되물음) / unsupported(미지원).
+// 응답을 "분류 결과" 하나로 요약. 카테고리 키 / clarify(되물음) / unsupported(미지원)
 function classify(data) {
   if (data.clarifyingQuestion) return "clarify(되물음)";
   if (data.categoryKey) return data.categoryKey;
@@ -55,7 +55,7 @@ async function callChat(text) {
 async function main() {
   console.log(`\n성분핏 AI 분류 일관성 검증 — ${BASE_URL}, 문장당 ${REPEATS}회 반복\n`);
 
-  // 서버가 떠 있는지 먼저 확인해요.
+  // 서버 떠 있는지 먼저 확인
   try {
     await fetch(BASE_URL, { signal: AbortSignal.timeout(3000) });
   } catch {
@@ -83,7 +83,7 @@ async function main() {
       await sleep(DELAY_MS);
     }
 
-    // 최빈값(가장 많이 나온 결과) 기준 일치율을 계산해요.
+    // 최빈값(가장 많이 나온 결과) 기준으로 일치율 계산
     const counts = new Map();
     for (const o of outcomes) counts.set(o, (counts.get(o) ?? 0) + 1);
     const [mode, modeCount] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];

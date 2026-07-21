@@ -46,12 +46,11 @@ function sortProducts(list: Product[], sortKey: SortKey): Product[] {
 }
 
 interface Props {
-    // 모바일(480px 컨테이너)에서는 항상 1열로, 상단 CTA도 세로로 쌓아요.
+    // 모바일(480px 컨테이너)에선 항상 1열, 상단 CTA도 세로로 쌓음
     compact?: boolean;
-    // ⚠️ Supabase 연동 후: 더 이상 lib/products.ts의 정적 배열을 직접 import하지 않고,
-    // 부모 서버 컴포넌트(app/products/page.tsx 등)가 getAllProducts()로 조회한 결과를
-    // props로 내려받아요. 이렇게 하면 이 컴포넌트는 "use client"를 유지하면서도
-    // 최신 Supabase 데이터를 그대로 쓸 수 있어요.
+    // Supabase 연동 후엔 lib/products.ts 정적 배열 직접 import 안 함.
+    // 부모 서버 컴포넌트(app/products/page.tsx)가 getAllProducts()로 조회해서 props로 내려줌.
+    // "use client" 유지하면서 최신 Supabase 데이터 쓰려고 이렇게 함
     products: Product[];
 }
 
@@ -90,9 +89,8 @@ export default function ProductsContent({ compact = false, products }: Props) {
     const currentPage = Math.min(page, totalPages);
     const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-    // "성분핏이 엄선한 추천템" 뱃지 — 같은 성분을 담은 제품들 중 ml당 가격이 가장 낮은
-    // 제품에 표시해요. 채팅 추천처럼 예산까지 고려한 점수는 아니지만, 이 페이지엔 예산
-    // 조건이 없어서 객관적으로 계산 가능한 "용량 대비 가격"을 기준으로 삼았어요.
+    // "성분핏 추천" 뱃지: 같은 성분 제품 중 ml당 가격 최저인 것에 표시.
+    // 이 페이지엔 예산 조건이 없어서 객관적으로 계산 가능한 "용량 대비 가격"만 기준으로 씀
     const bestValueIds = useMemo(() => {
         const byIngredient = new Map<string, Product>();
         for (const p of products) {
@@ -247,8 +245,7 @@ export default function ProductsContent({ compact = false, products }: Props) {
                                         backgroundColor: `${accentColor}0d`,
                                     }}>
                                     <div className="flex items-start gap-3">
-                                        {/* 더미 제품이라 실사진이 없어서, 파스텔 배경(imageColor) 위에
-                        공용 세럼 아이콘을 얹은 플레이스홀더를 사용해요. */}
+                                        {/* 더미 제품이라 실사진 없음. 파스텔 배경(imageColor) + 공용 세럼 아이콘 플레이스홀더 */}
                                         <div
                                             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg"
                                             style={{ backgroundColor: p.imageColor }}
@@ -271,9 +268,8 @@ export default function ProductsContent({ compact = false, products }: Props) {
                                             </p>
                                         </div>
                                     </div>
-                                    {/* 성분 태그랑 같은 줄, 같은 스타일(둥근 배경 필)로 나란히 둬서
-                    시각적으로 통일감 있게 했어요. 태그 행은 이름 줄과 별개라
-                    배지가 있어도 카드 높이는 전혀 달라지지 않아요. */}
+                                    {/* 성분 태그랑 같은 줄, 같은 스타일(둥근 필)로 둬서 통일감.
+                    태그 행이 이름 줄과 별개라 배지 있어도 카드 높이 안 변함 */}
                                     <div className="mt-3 flex flex-wrap items-center gap-1.5">
                                         {ingredient && (
                                             <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-primary-soft)] py-1 pl-1 pr-2.5 text-[11px] font-medium text-[var(--color-primary)]">

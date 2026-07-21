@@ -7,10 +7,9 @@ interface Props {
     onSubmit: (text: string) => void;
     placeholder?: string;
     disabled?: boolean;
-    // 입력창 왼쪽에 붙는 버튼 자리예요(예: 모바일의 "+" 메뉴 버튼).
-    // 입력창 바깥에 절대(absolute)로 띄우면 화면/카드 높이가 바뀔 때마다 위치가
-    // 어긋나는데, 이렇게 입력창과 같은 줄에 두면 항상 입력창 바로 옆에 붙어있어서
-    // 어떤 기기·어떤 대화 길이에서도 위치가 흔들리지 않아요.
+    // 입력창 왼쪽에 붙는 버튼 자리 (모바일 "+" 메뉴 버튼 등).
+    // absolute로 띄우면 화면/카드 높이 바뀔 때마다 위치 어긋나서,
+    // 입력창과 같은 줄에 둬서 위치 안 흔들리게 함
     leading?: ReactNode;
 }
 
@@ -20,8 +19,8 @@ export default function ChatInput({
     disabled,
     leading,
 }: Props) {
-    // 입력 중인 텍스트는 이 컴포넌트 안에만 둬요 — 부모(ChatWindow)가 들고 있으면
-    // 키 하나 칠 때마다 채팅 메시지 전체가 리렌더돼요.
+    // 입력 중인 텍스트는 이 컴포넌트 안에만 둠. 부모(ChatWindow)가 들고 있으면
+    // 키 하나 칠 때마다 채팅 메시지 전체가 리렌더됨
     const [value, setValue] = useState('');
 
     return (

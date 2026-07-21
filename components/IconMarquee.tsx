@@ -5,8 +5,8 @@ interface Props {
 }
 
 export default function IconMarquee({ rows = 2 }: Props) {
-  // 끊김없이 반복되도록 아이콘 배열을 두 번 이어붙여요(하나가 끝나는 지점에 다음
-  // 세트가 이어져서, -50% 만큼 움직이면 처음이랑 똑같아 보여요).
+  // 끊김없이 반복되게 아이콘 배열 두 번 이어붙임.
+  // -50% 만큼 움직이면 처음이랑 똑같아 보이는 원리
   const items = [...ICONS, ...ICONS];
   const itemsReversed = [...ICONS].reverse();
   const itemsReversedDup = [...itemsReversed, ...itemsReversed];

@@ -13,9 +13,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="h-full antialiased">
-      {/* Pretendard: 전체 가변 폰트(~2MB) 대신 dynamic subset — 화면에 실제로 쓰인
-          글자 구간(unicode-range)만 조각으로 내려받아 첫 렌더가 훨씬 빨라요.
-          Gmarket Sans(@font-face, globals.css)도 같은 CDN이라 preconnect를 공유해요. */}
+      {/* Pretendard: 전체 가변 폰트(~2MB) 말고 dynamic subset 씀.
+          실제 쓰인 글자 구간(unicode-range)만 조각으로 받아서 첫 렌더 훨씬 빠름.
+          Gmarket Sans(@font-face, globals.css)도 같은 CDN이라 preconnect 공유 */}
       <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
       <link
         rel="stylesheet"

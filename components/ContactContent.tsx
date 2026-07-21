@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-// TODO: 실제 서비스에서는 팀 문의용 이메일이나 별도 폼(예: Google Forms)으로 교체해주세요.
+// TODO: 실서비스에선 팀 문의용 이메일이나 별도 폼(Google Forms 등)으로 교체해야 함
 const CONTACT_EMAIL = "help@seongbunfit.com";
 
 const CATEGORIES = ["서비스 이용 문의", "제품/성분 데이터 오류 제보", "제휴/광고 문의", "기타"];

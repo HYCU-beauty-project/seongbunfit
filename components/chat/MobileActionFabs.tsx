@@ -11,17 +11,15 @@ interface Props {
     onOpenContact: () => void;
 }
 
-// ⚠️ 원래는 카드/캐러셀 위에 떠 있는 플로팅 버튼(FAB)이었는데, 결과 카드 길이가
-// 대화마다 달라지다 보니 우측 하단에 절대(absolute) 위치로 띄우면 캐러셀
-// 화살표·입력창·메시지 텍스트랑 계속 겹쳤어요. 그래서 한 번은 헤더 안의 "⋯"
-// 버튼으로 옮겼었는데, 그러니 이번엔 원래 + 버튼만큼 눈에 띄지 않아 직관성이
-// 떨어졌어요.
+// 원래 카드/캐러셀 위에 뜨는 플로팅 버튼(FAB)이었는데 결과 카드 길이가
+// 대화마다 달라서 absolute로 띄우면 캐러셀 화살표/입력창/메시지 텍스트랑
+// 계속 겹쳤음. 헤더 안 "⋯" 버튼으로도 옮겨봤는데 그건 눈에 안 띄어서
+// 직관성 떨어짐
 //
-// 지금은 이 버튼을 "떠 있는 요소"가 아니라 입력창(ChatInput)과 같은 줄에 놓인
-// 일반 레이아웃 요소로 만들었어요(ChatWindow에서 <ChatInput leading={...} />로
-// 전달). 입력창은 스크롤 영역 밖에 항상 고정으로 있는 자리라, 대화가 길어지든
-// 카드가 커지든 이 버튼 위치는 절대 흔들리지 않아요. 메뉴는 버튼 위로(위쪽 방향)
-// 펼쳐지도록 해서, 화면 아래쪽에 있어도 화면 밖으로 잘리지 않아요.
+// 지금은 떠 있는 요소 말고 입력창(ChatInput)과 같은 줄의 일반 레이아웃 요소로
+// 만듦 (ChatWindow에서 <ChatInput leading={...} />로 전달). 입력창은 스크롤
+// 영역 밖 고정 자리라 대화 길어지든 카드 커지든 버튼 위치 안 흔들림.
+// 메뉴는 버튼 위쪽으로 펼쳐져서 화면 아래에 있어도 밖으로 안 잘림
 export default function MobileActionFabs({
     compareCount,
     favoriteCount,
@@ -34,7 +32,7 @@ export default function MobileActionFabs({
     const wrapperRef = useRef<HTMLDivElement>(null);
     const badgeCount = compareCount + favoriteCount;
 
-    // 메뉴 바깥을 탭하면 닫히게 해요.
+    // 메뉴 바깥 탭하면 닫힘
     useEffect(() => {
         if (!open) return;
         function handleClickOutside(e: MouseEvent) {

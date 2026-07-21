@@ -1,20 +1,20 @@
 -- ============================================================================
--- 성분핏(IngredientFit) — 목표 Supabase 스키마
+-- 성분핏(IngredientFit) 목표 Supabase 스키마
 -- ============================================================================
--- 지금은 이 SQL이 실제로 실행되고 있지 않아요(더미 데이터 프로토타입 단계).
--- Supabase를 실제로 연동할 때 이 파일을 기준으로 테이블을 만들면, 지금 화면에서
--- 쓰고 있는 타입(types/index.ts)이나 계산 로직(lib/scoring/calculator.ts)을
--- 거의 그대로 재사용할 수 있도록 설계해뒀어요.
+-- 지금은 이 SQL 실제로 실행 안 됨(더미 데이터 프로토타입 단계).
+-- Supabase 실제 연동 시 이 파일 기준으로 테이블 만들면, 지금 화면에서 쓰는
+-- 타입(types/index.ts)이나 계산 로직(lib/scoring/calculator.ts)을
+-- 거의 그대로 재사용할 수 있게 설계함
 --
--- ⚠️ 지금 lib/products.ts의 더미 데이터는 "제품 하나당 핵심 성분 하나"로
--- 단순화되어 있는데, 실제로는 화장품 하나에 성분이 수십 개 들어있고 각 성분마다
--- 배치 순번이 달라요. 그래서 products와 ingredients는 1:1이 아니라 다대다(N:M)
--- 관계이고, 그 관계를 표현하는 게 product_ingredients예요. 이 스키마는 그 실제
--- 구조를 기준으로 짰어요 — 나중에 진짜 데이터를 넣을 때 이 구조를 따라가시면 돼요.
+-- 지금 lib/products.ts 더미 데이터는 "제품 하나당 핵심 성분 하나"로 단순화돼
+-- 있는데, 실제론 화장품 하나에 성분 수십 개 들어있고 각 성분마다 배치 순번이
+-- 다름. 그래서 products와 ingredients는 1:1이 아니라 다대다(N:M)이고,
+-- 그 관계를 표현하는 게 product_ingredients임. 이 스키마는 그 실제 구조
+-- 기준으로 짬. 나중에 진짜 데이터 넣을 때 이 구조 따라가면 됨
 -- ============================================================================
 
--- 1. ingredients — 성분 마스터 데이터
--- types/index.ts의 Ingredient 인터페이스와 거의 1:1로 대응돼요.
+-- 1. ingredients: 성분 마스터 데이터
+-- types/index.ts의 Ingredient 인터페이스와 거의 1:1 대응
 create table ingredients (
   id text primary key,                 -- 예: 'retinol', 'hyaluronic-acid' (영문 slug, Ingredient.id)
   name text not null,                  -- 예: '레티놀' (Ingredient.name)
@@ -24,13 +24,13 @@ create table ingredients (
   caution text not null,               -- 주의사항 (Ingredient.caution)
   good_for text not null,              -- 적합 피부 (Ingredient.goodFor)
   is_recommended boolean default false,-- 카테고리 내 기본 추천 여부 (Ingredient.recommended)
-  is_irritant boolean default false,   -- 자극 성분 여부 — lib/safety.ts가 이 값으로 순위 조정
+  is_irritant boolean default false,   -- 자극 성분 여부. lib/safety.ts가 이 값으로 순위 조정
   created_at timestamptz default now()
 );
 
--- 2. products — 제품 마스터 데이터
--- types/index.ts의 Product 인터페이스에서 ingredientId/actualPosition은 빠지고
--- (그건 product_ingredients로 옮겨가요), 나머지는 거의 그대로예요.
+-- 2. products: 제품 마스터 데이터
+-- types/index.ts의 Product 인터페이스에서 ingredientId/actualPosition만 빠지고
+-- (그건 product_ingredients로 옮겨감) 나머지는 거의 그대로임
 create table products (
   id text primary key,
   name text not null,
@@ -38,16 +38,16 @@ create table products (
   price integer not null,              -- 원 단위
   volume_ml integer not null,
   purchase_url text not null,
-  image_url text,                      -- 지금은 image_color(더미 배경색)만 쓰지만,
-                                        -- 실제 제품 사진이 생기면 이 컬럼을 추가로 써요.
-  image_color text,                    -- 더미 썸네일용 배경색 (Product.imageColor) — 실사진 붙으면 삭제 가능
+  image_url text,                      -- 지금은 image_color(더미 배경색)만 쓰지만
+                                        -- 실제 제품 사진 생기면 이 컬럼 추가로 쓰면 됨
+  image_color text,                    -- 더미 썸네일용 배경색 (Product.imageColor). 실사진 붙으면 삭제 가능
   created_at timestamptz default now()
 );
 
--- 3. product_ingredients — 제품 × 성분 (다대다 관계 + 배치 점수)
--- 팀 메모에 있던 "pre-calculated placement_score"가 바로 이거예요. 전성분 텍스트
--- 파싱은 데이터 입력 시점에 한 번만 하고, 그 결과(실제 배치 순번 → 배치 점수)를
--- 미리 계산해서 저장해둬요. 조회할 때 매번 파싱하지 않아도 되게요.
+-- 3. product_ingredients: 제품 × 성분 (다대다 관계 + 배치 점수)
+-- 팀 메모의 "pre-calculated placement_score"가 이거임. 전성분 텍스트 파싱은
+-- 데이터 입력 시점에 한 번만 하고, 결과(실제 배치 순번 → 배치 점수)를
+-- 미리 계산해서 저장함. 조회할 때 매번 파싱 안 해도 됨
 create table product_ingredients (
   id uuid primary key default gen_random_uuid(),
   product_id text not null references products(id) on delete cascade,
@@ -58,9 +58,9 @@ create table product_ingredients (
 );
 create index idx_product_ingredients_ingredient on product_ingredients(ingredient_id);
 
--- 4. skin_analyses — 사용자 상담/분석 기록
--- 로드맵의 "로그인 · 상담 내역 저장" 기능이 실제로 붙을 때 쓰는 테이블이에요.
--- 지금은 로그인이 없어서 이 테이블도 아직 안 쓰여요.
+-- 4. skin_analyses: 사용자 상담/분석 기록
+-- 로드맵의 "로그인 · 상담 내역 저장" 기능 붙을 때 쓰는 테이블.
+-- 지금은 로그인 없어서 이 테이블도 아직 안 쓰임
 create table skin_analyses (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade,
@@ -76,15 +76,15 @@ create index idx_skin_analyses_user on skin_analyses(user_id);
 -- ============================================================================
 -- 5. Row Level Security (RLS)
 -- ============================================================================
--- anon key는 NEXT_PUBLIC_ 환경변수라서 브라우저에 그대로 노출돼요. RLS가 없으면
--- 그 키만으로 누구나 모든 테이블을 읽고 "쓰고 지울 수" 있기 때문에, 테이블을 만들
--- 때 반드시 아래 정책을 같이 적용해야 해요.
+-- anon key는 NEXT_PUBLIC_ 환경변수라 브라우저에 그대로 노출됨. RLS 없으면
+-- 그 키만으로 누구나 모든 테이블 읽고 "쓰고 지울 수" 있어서, 테이블 만들 때
+-- 반드시 아래 정책 같이 적용해야 함
 --
 -- 원칙:
 --  - 카탈로그 테이블(ingredients/products/product_ingredients): 누구나 읽기만 가능.
---    쓰기 정책을 아예 만들지 않으면 anon/authenticated의 insert/update/delete는
---    전부 거부돼요. 데이터 입력은 service role 키(RLS 우회, 서버 전용)로만 해요.
---  - skin_analyses: 본인(auth.uid() = user_id) 기록만 조회/저장 가능.
+--    쓰기 정책을 아예 안 만들면 anon/authenticated의 insert/update/delete는
+--    전부 거부됨. 데이터 입력은 service role 키(RLS 우회, 서버 전용)로만 함
+--  - skin_analyses: 본인(auth.uid() = user_id) 기록만 조회/저장 가능
 
 alter table ingredients enable row level security;
 alter table products enable row level security;
@@ -112,8 +112,8 @@ create policy "skin_analyses_owner_insert"
   with check (auth.uid() = user_id);
 
 -- ============================================================================
--- 조회 시 자주 쓰게 될 쿼리 예시 (lib/scoring/calculator.ts의 scoreProducts()가
--- 지금 더미 데이터로 하는 일을 Supabase 버전으로 옮기면 이런 모양이 돼요)
+-- 조회 시 자주 쓸 쿼리 예시 (lib/scoring/calculator.ts의 scoreProducts()가
+-- 지금 더미 데이터로 하는 일을 Supabase 버전으로 옮기면 이런 모양 됨)
 -- ============================================================================
 -- 특정 성분을 포함한 제품 후보 + 배치 점수를 한 번에 가져오기:
 --
@@ -126,6 +126,6 @@ create policy "skin_analyses_owner_insert"
 -- where pi.ingredient_id = :ingredientId
 -- order by pi.placement_score desc;
 --
--- 이 결과를 lib/scoring/calculator.ts의 scoreProducts()에 그대로 넘기면,
--- ml당 가격 점수·예산 점수 계산 로직은 손댈 필요 없어요(그 부분은 이미
--- DB 데이터가 아니라 순수 계산 로직이라서요).
+-- 이 결과를 lib/scoring/calculator.ts의 scoreProducts()에 그대로 넘기면
+-- ml당 가격 점수·예산 점수 계산 로직은 손댈 필요 없음 (그 부분은
+-- DB 데이터가 아니라 순수 계산 로직이라서)

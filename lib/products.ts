@@ -2,8 +2,8 @@ import type { Product } from '@/types';
 import { getSupabaseClient } from '@/lib/supabase/client';
 
 // ============================================================================
-// ⚠️ 아래 products는 Supabase 연결 실패 시 폴백용으로만 남겨둡니다.
-// 실제 데이터는 Supabase의 products / product_ingredients 테이블에서 옵니다.
+// 아래 products는 Supabase 연결 실패 시 폴백용으로만 남겨둠
+// 실제 데이터는 Supabase의 products / product_ingredients 테이블에서 옴
 // ============================================================================
 
 const colors = ['#EDE9FB', '#F5EEE6', '#E8F1EC', '#F1E9EC', '#EAF0F5', '#F6F1E4'];
@@ -392,7 +392,7 @@ const rows: Row[] = [
     },
 ];
 
-// components/ProductsContent.tsx 등에서 이 이름으로 import해요 (폴백 데이터).
+// components/ProductsContent.tsx 등에서 이 이름으로 import함 (폴백 데이터)
 export const products: Product[] = rows.map((row, idx) => ({
     id: `${row.ingredientId}-${idx}`,
     name: row.name,
@@ -410,10 +410,10 @@ function getMockProductsForIngredient(ingredientId: string): Product[] {
 }
 
 // ============================================================================
-// 실제 함수 — Supabase 우선, 실패 시 mock으로 폴백
+// 실제 함수: Supabase 우선, 실패 시 mock으로 폴백
 // ============================================================================
 
-// Supabase에서 product_ingredients ⋈ products 조인 결과로 오는 행의 타입.
+// Supabase에서 product_ingredients ⋈ products 조인 결과로 오는 행 타입
 interface ProductIngredientRow {
     actual_position: number;
     ingredient_id: string;
@@ -458,8 +458,8 @@ function mapJoinedRows(rows: ProductIngredientRow[]): Product[] {
 }
 
 /**
- * 특정 성분을 포함한 제품 목록을 가져옵니다. (AI 추천 흐름에서 사용)
- * ⚠️ 비동기입니다. 호출하는 쪽(lib/scoring/calculator.ts의 getTop3 등)에서 반드시 await 해주세요.
+ * 특정 성분을 포함한 제품 목록 가져옴 (AI 추천 흐름에서 사용)
+ * 비동기라서 호출하는 쪽(lib/scoring/calculator.ts의 getTop3 등)에서 반드시 await 해야 함
  */
 export async function getProductsForIngredient(ingredientId: string): Promise<Product[]> {
     const supabase = getSupabaseClient();
@@ -483,10 +483,10 @@ export async function getProductsForIngredient(ingredientId: string): Promise<Pr
 }
 
 /**
- * 전체 제품 목록을 가져옵니다. (제품 전체보기 페이지 — components/ProductsContent.tsx 용)
- * ⚠️ 서버 컴포넌트(예: app/products/page.tsx)에서 호출해서, 결과를
- * ProductsContent에 props로 내려주는 방식으로 써주세요. 클라이언트 컴포넌트
- * 최상단에서 직접 호출하면 안 돼요 (비동기라서요).
+ * 전체 제품 목록 가져옴 (제품 전체보기 페이지, components/ProductsContent.tsx 용)
+ * 서버 컴포넌트(예: app/products/page.tsx)에서 호출해서 결과를 ProductsContent에
+ * props로 내려주는 방식으로 써야 함. 비동기라서 클라이언트 컴포넌트
+ * 최상단에서 직접 호출하면 안 됨
  */
 export async function getAllProducts(): Promise<Product[]> {
     const supabase = getSupabaseClient();

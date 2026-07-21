@@ -9,7 +9,7 @@ const SEGMENTS = [
 ];
 
 interface Props {
-  size?: number; // 렌더링 크기(px). viewBox와 반지름은 이 값에 맞춰 자동 계산돼요.
+  size?: number; // 렌더링 크기(px). viewBox랑 반지름은 이 값 기준 자동 계산됨
 }
 
 export default function ScoreDonut({ size = 160 }: Props) {
@@ -37,8 +37,8 @@ export default function ScoreDonut({ size = 160 }: Props) {
     return () => observer.disconnect();
   }, []);
 
-  // 렌더링 중에 변수를 mutate하면 안 되니까(react-hooks/immutability), 각 구간의
-  // 누적 시작 위치를 렌더 전에 미리 계산해둬요.
+  // 렌더링 중 변수 mutate 금지(react-hooks/immutability)라서
+  // 각 구간의 누적 시작 위치를 렌더 전에 미리 계산해둠
   const segStarts: number[] = [];
   let acc = 0;
   for (const seg of SEGMENTS) {

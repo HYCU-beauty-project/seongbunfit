@@ -158,9 +158,9 @@ export default function CompareModal({ open, items, onClose, onRemove, onClearAl
                       />
                     </div>
 
-                    {/* mt-auto로 카드 하단에 고정해서, 제품명 줄바꿈 등으로 카드마다
-                        내용 길이가 달라도 "구매하러 가기" 버튼은 항상 같은 세로 위치에
-                        오게 했어요(부모가 flex라 카드 높이 자체는 이미 서로 같아요). */}
+                    {/* mt-auto로 카드 하단 고정. 제품명 줄바꿈 등으로 카드마다 내용
+                        길이 달라도 "구매하러 가기" 버튼은 항상 같은 세로 위치에 옴
+                        (부모가 flex라 카드 높이는 이미 서로 같음) */}
                     <div className="mt-auto pt-2.5">
                       <a
                         href={p.purchaseUrl}

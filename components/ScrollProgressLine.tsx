@@ -13,7 +13,7 @@ export default function ScrollProgressLine({ className = "" }: { className?: str
       const rect = el.getBoundingClientRect();
       const viewportH = window.innerHeight;
 
-      // 섹션이 화면 하단에 처음 나타날 때 0, 화면 중앙쯤 지날 때 1이 되도록 계산해요.
+      // 섹션이 화면 하단에 처음 나타날 때 0, 중앙쯤 지날 때 1 되게 계산
       const start = viewportH * 0.85;
       const end = viewportH * 0.35;
       const raw = (start - rect.top) / (start - end);

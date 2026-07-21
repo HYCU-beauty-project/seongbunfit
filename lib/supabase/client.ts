@@ -6,10 +6,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 let client: SupabaseClient | null = null;
 
 /**
- * Supabase 클라이언트를 가져옵니다.
- * .env.local에 NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY가
- * 설정되기 전까지는 null을 반환하므로, 호출하는 쪽에서 반드시 null 체크 후
- * 더미 데이터(lib/products.ts)로 폴백하도록 되어 있습니다.
+ * Supabase 클라이언트 가져옴.
+ * .env.local에 NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY
+ * 설정 전까진 null 반환이라, 호출하는 쪽에서 반드시 null 체크 후
+ * 더미 데이터(lib/products.ts)로 폴백해야 함
  */
 export function getSupabaseClient(): SupabaseClient | null {
   if (client) return client;

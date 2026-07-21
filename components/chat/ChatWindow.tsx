@@ -50,14 +50,14 @@ function makeId() {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-// useLocalStorage의 initialValue로 인라인 []를 넘기면 렌더마다 새 배열이라
-// 내부 useMemo가 매번 다시 계산돼요 — 모듈 상수로 참조를 고정해요.
+// useLocalStorage initialValue에 인라인 [] 넘기면 렌더마다 새 배열이라
+// 내부 useMemo가 매번 재계산됨. 모듈 상수로 참조 고정
 const initialCompareItems: CompareItem[] = [];
 const initialFavoriteItems: FavoriteItem[] = [];
 const EMPTY_IDS: string[] = [];
 
-// 항상 같은 함수 참조를 유지하면서 최신 구현을 호출해요 — memo된 MessageBubble에
-// 넘기는 핸들러 참조가 렌더마다 바뀌어 memo가 무력화되는 걸 막아줘요.
+// 함수 참조는 고정하고 최신 구현 호출하는 용도. memo된 MessageBubble에
+// 넘기는 핸들러 참조가 렌더마다 바뀌면 memo 무력화돼서 이렇게 함
 function useStableCallback<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => R {
     const ref = useRef(fn);
     useEffect(() => {
@@ -67,10 +67,9 @@ function useStableCallback<A extends unknown[], R>(fn: (...args: A) => R): (...a
 }
 
 interface ChatWindowProps {
-    // /mobile 페이지는 480px짜리 컨테이너 안에 있어도, 실제 브라우저 창이 넓으면(예: 데스크톱에서
-    // 개발자도구 없이 그냥 열었을 때) md: 기준이 "진짜 뷰포트 너비"로 판단돼서 2단 레이아웃이
-    // 좁은 컨테이너 안에서 찌그러져요. 이 값을 true로 주면 뷰포트 크기와 상관없이 항상 1단으로
-    // 쌓아서 보여줘요.
+    // /mobile 페이지가 480px 컨테이너 안이어도 브라우저 창이 넓으면 md: 기준이
+    // 진짜 뷰포트 너비로 판단돼서 2단 레이아웃이 좁은 컨테이너에서 찌그러짐.
+    // true 주면 뷰포트 크기 상관없이 항상 1단으로 쌓음
     forceStacked?: boolean;
 }
 
@@ -85,7 +84,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
     const [showCompareModal, setShowCompareModal] = useState(false);
     const [showFavoritesModal, setShowFavoritesModal] = useState(false);
     const [showContactModal, setShowContactModal] = useState(false);
-    // 모바일 헤더의 "선택한 조건 / 처음부터 다시 시작하기" 드롭다운 패널이에요.
+    // 모바일 헤더의 "선택한 조건 / 처음부터 다시 시작하기" 드롭다운 패널
     const [showHeaderConditions, setShowHeaderConditions] = useState(false);
     const [previewIngredientId, setPreviewIngredientId] = useState<string | null>(null);
     const [compareItems, setCompareItems, compareHydrated] = useLocalStorage<CompareItem[]>(
@@ -98,8 +97,8 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
     );
     const scrollRef = useRef<HTMLDivElement>(null);
     const headerConditionsRef = useRef<HTMLDivElement>(null);
-    // 결과 카드처럼 세로로 긴 메시지가 새로 추가됐을 때, 그 메시지의 "시작 지점"으로
-    // 스크롤하기 위한 ref예요 (아래 useEffect에서 사용).
+    // 결과 카드처럼 세로로 긴 메시지 새로 추가됐을 때 그 메시지 시작 지점으로
+    // 스크롤하는 용도 (아래 useEffect에서 씀)
     const lastMessageRef = useRef<HTMLDivElement>(null);
     const searchParams = useSearchParams();
     const autoTriggeredRef = useRef(false);
@@ -108,18 +107,16 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         const container = scrollRef.current;
         if (!container) return;
         const last = messages[messages.length - 1];
-        // 결과 카드(kind === "result")는 세로로 길어서, 무조건 맨 아래로 스크롤하면
-        // 카드 상단(배지·썸네일·제품명)이 화면 위로 밀려서 잘려 보여요. 모바일(forceStacked,
-        // 카드 1개씩 풀와이드)에서는 그래서 카드 "시작 지점"이 보이도록 스크롤해요.
+        // 결과 카드(kind === "result")는 세로로 길어서 무조건 맨 아래로 스크롤하면
+        // 카드 상단(배지/썸네일/제품명)이 잘림. 그래서 모바일(forceStacked, 카드 1개씩
+        // 풀와이드)에서는 카드 시작 지점 보이게 스크롤
         //
-        // 반면 데스크톱(카드 2개씩 + 페이지네이션 점)에서는 카드 폭이 넓어 상대적으로
-        // 텍스트가 짧게 줄바꿈되어 카드 자체가 더 짧고, 페이지네이션 점까지 보이는 게
-        // 자연스러워서 기존처럼 끝까지 스크롤해요.
+        // 데스크톱(카드 2개씩 + 페이지네이션 점)은 카드가 더 짧고 점까지 보이는 게
+        // 자연스러워서 기존처럼 끝까지 스크롤
         //
-        // ⚠️ scrollIntoView()는 이 컨테이너 밖의 페이지(window) 스크롤까지 같이
-        // 움직여버려서, 채팅창(고정 높이 패널) 밖의 헤더/푸터까지 밀리는
-        // 문제가 있었어요. 그래서 getBoundingClientRect로 좌표를 직접 계산해서,
-        // 오직 이 컨테이너(container) 안쪽만 스크롤하도록 바꿨어요.
+        // scrollIntoView() 쓰면 페이지 전체 스크롤까지 같이 움직여서
+        // 헤더/푸터 밀리는 버그 있었음. 그래서 getBoundingClientRect로
+        // 좌표 직접 계산해서 이 컨테이너 안쪽만 스크롤하게 함
         if (forceStacked && last?.role === 'ai' && last.kind === 'result' && lastMessageRef.current) {
             const containerRect = container.getBoundingClientRect();
             const messageRect = lastMessageRef.current.getBoundingClientRect();
@@ -130,9 +127,9 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         }
     }, [messages, isTyping, forceStacked]);
 
-    // 랜딩페이지 "이런 고민" 카드에서 /chat?concern=wrinkle 같은 링크로 들어오면,
-    // 그 고민을 자동으로 입력한 것처럼 바로 성분 추천까지 진행해줘요.
-    // 이미 대화가 진행 중인 상태(localStorage에 남아있는 이전 대화)라면 건드리지 않아요.
+    // 랜딩 "이런 고민" 카드에서 /chat?concern=wrinkle 같은 링크로 들어오면
+    // 그 고민을 자동 입력한 것처럼 바로 성분 추천까지 진행.
+    // localStorage에 이전 대화 남아있으면 건드리지 않음
     useEffect(() => {
         if (!hydrated || autoTriggeredRef.current) return;
         const concern = searchParams.get('concern');
@@ -146,7 +143,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hydrated, searchParams, messages, conditions]);
 
-    // 헤더 드롭다운(선택한 조건 / 처음부터 다시 시작하기) 바깥을 탭하면 닫혀요.
+    // 헤더 드롭다운(선택한 조건 / 처음부터 다시 시작하기) 바깥 탭하면 닫힘
     useEffect(() => {
         if (!showHeaderConditions) return;
         function handleClickOutside(e: MouseEvent) {
@@ -185,7 +182,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text }),
             });
-            // 서버 오류를 "지원하지 않는 질문" 안내로 오인하지 않게 여기서 걸러요.
+            // 서버 오류를 "지원하지 않는 질문" 안내로 오인하면 안 돼서 여기서 거름
             if (!res.ok) throw new Error(`chat api ${res.status}`);
             const data = await res.json();
             applyConcernApiResponse(data);
@@ -196,8 +193,8 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         }
     }
 
-    // /api/chat 응답 하나를 메시지로 반영해요. handleConcernInput과
-    // tryHandleTopicSwitch가 API를 중복 호출하지 않고 이 함수를 같이 써요.
+    // /api/chat 응답 하나를 메시지로 반영. handleConcernInput과
+    // tryHandleTopicSwitch가 API 중복 호출 안 하고 이 함수 같이 씀
     function applyConcernApiResponse(data: {
         clarifyingQuestion?: string;
         categoryKey?: CategoryKey | null;
@@ -207,9 +204,9 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         safetyNotice?: string;
     }) {
         if (typeof data.clarifyingQuestion === 'string' && data.clarifyingQuestion) {
-            // 너무 막연한 문장이라 AI가 카테고리를 억지로 고르는 대신 되물어봐요.
-            // intro 메시지로 넣으면 카테고리 칩도 다시 뜨니까, 사용자가 직접 답하거나
-            // 칩을 눌러서 바로 골라도 돼요 — 진짜 멀티턴처럼 자연스럽게 이어져요.
+            // 너무 막연한 문장이면 카테고리 억지로 고르는 대신 되물어봄.
+            // intro 메시지로 넣으면 카테고리 칩도 다시 떠서 직접 답하거나
+            // 칩 눌러 바로 골라도 됨. 멀티턴처럼 자연스럽게 이어짐
             setMessages((prev) => [
                 ...prev,
                 {
@@ -224,8 +221,8 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         }
 
         if (!data.categoryKey) {
-            // 5개 고민 카테고리 중 어디에도 해당하지 않는 질문 — 억지로 카테고리를 고르지 않고
-            // 다시 물어봐요. 새 intro 메시지를 넣으면 카테고리 칩도 다시 떠요.
+            // 5개 고민 카테고리 어디에도 안 맞는 질문. 억지로 고르지 말고
+            // 다시 물어봄. 새 intro 메시지 넣으면 카테고리 칩도 다시 뜸
             setMessages((prev) => [
                 ...prev,
                 {
@@ -297,7 +294,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ingredientId, budgetId }),
             });
-            // 서버 오류를 "조건에 맞는 제품 없음"으로 오인해 조건까지 확정하면 안 돼요.
+            // 서버 오류를 "조건에 맞는 제품 없음"으로 오인해서 조건까지 확정하면 안 됨
             if (!res.ok) throw new Error(`recommend api ${res.status}`);
             const data = await res.json();
             const results: ScoredProduct[] = data.results ?? [];
@@ -339,7 +336,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                 handleIngredientSelect(category.key, matched.id, matched.name);
                 return;
             }
-            // 성분 이름이 아니면, 혹시 아예 다른 고민으로 넘어가신 건 아닌지 먼저 확인해봐요.
+            // 성분 이름 아니면 아예 다른 고민으로 넘어간 건지 먼저 확인
             const switched = await tryHandleTopicSwitch(text);
             if (!switched) {
                 pushUser(text);
@@ -354,7 +351,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                 handleBudgetSelect(parsed.id);
                 return;
             }
-            // 예산 형식이 아니면, 혹시 아예 다른 고민으로 넘어가신 건 아닌지 먼저 확인해봐요.
+            // 예산 형식 아니면 아예 다른 고민으로 넘어간 건지 먼저 확인
             const switched = await tryHandleTopicSwitch(text);
             if (!switched) {
                 pushUser(text);
@@ -368,9 +365,9 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         handleConcernInput(text);
     }
 
-    // 성분/예산 선택 단계에서 입력이 형식에 안 맞을 때, 완전히 다른 고민으로 화제가
-    // 바뀐 건 아닌지 조용히 확인해요. 진짜로 새 고민이면 그 고민으로 새로 시작하고,
-    // 아니면(그냥 형식을 잘못 입력한 거면) false를 반환해서 기존 안내 문구가 뜨게 해요.
+    // 성분/예산 선택 단계에서 입력이 형식에 안 맞으면 화제가 다른 고민으로
+    // 바뀐 건지 조용히 확인. 진짜 새 고민이면 그걸로 새로 시작하고,
+    // 아니면(그냥 형식 잘못 입력) false 반환해서 기존 안내 문구 뜨게 함
     async function tryHandleTopicSwitch(text: string): Promise<boolean> {
         setIsTyping(true);
         try {
@@ -441,7 +438,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
     }
 
     function handleToggleCompare(product: ScoredProduct, ingredientName: string, categoryLabel: string) {
-        // 초과 여부는 렌더 시점 state가 아니라 updater가 실제로 본 prev 기준으로 판정해요.
+        // 초과 여부는 렌더 시점 state 말고 updater가 실제로 본 prev 기준으로 판정
         let overflowed = false;
         setCompareItems((prev) => {
             const exists = prev.some((item) => item.id === product.id);
@@ -503,9 +500,8 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         return undefined;
     }, [messages]);
 
-    // memo된 MessageBubble이 실제로 효과를 내려면 넘기는 props의 참조가 안정적이어야
-    // 해요. 핸들러는 useStableCallback으로 참조를 고정하고, id 배열은 원본이 바뀔
-    // 때만 새로 만들어요.
+    // memo된 MessageBubble이 효과 있으려면 넘기는 props 참조가 안정적이어야 함.
+    // 핸들러는 useStableCallback으로 고정, id 배열은 원본 바뀔 때만 새로 만듦
     const stableToggleCompare = useStableCallback(handleToggleCompare);
     const stableToggleFavorite = useStableCallback(handleToggleFavorite);
     const stableIngredientSelect = useStableCallback(handleIngredientSelect);
@@ -523,13 +519,13 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         <div
             className={
                 forceStacked
-                    ? // ⚠️ 실제 모바일 브라우저는 주소창 때문에 보이는 화면 높이가 계속 바뀌는데,
-                      // 100vh는 "주소창이 사라졌을 때"의 최댓값으로 고정돼서 처음 켰을 때
-                      // 카드가 화면보다 커져 헤더·입력창을 보려면 스크롤해야 하는 문제가
-                      // 있었어요(크롬 데스크톱 기기 시뮬레이터는 이 문제가 재현되지 않아서
-                      // 거기선 멀쩡해 보였어요). 100dvh(동적 뷰포트 높이)로 바꾸고, 카드도
-                      // 고정 760px 대신 남는 공간을 꽉 채우게(h-full) 해서 모바일 헤더(65px)
-                      // 아래로 헤더·메시지창·입력창이 항상 한 화면 안에 다 들어오게 했어요.
+                    ? // 실제 모바일 브라우저는 주소창 때문에 보이는 높이가 계속 바뀌는데
+                      // 100vh는 주소창 사라졌을 때 최댓값으로 고정이라 처음 켰을 때 카드가
+                      // 화면보다 커져서 헤더/입력창 보려면 스크롤해야 하는 버그 있었음
+                      // (크롬 데스크톱 기기 시뮬레이터에선 재현 안 돼서 멀쩡해 보였음).
+                      // 100dvh(동적 뷰포트 높이)로 바꾸고 카드도 고정 760px 대신 h-full로
+                      // 꽉 채워서 모바일 헤더(65px) 아래 헤더/메시지창/입력창이 항상
+                      // 한 화면에 다 들어오게 함
                       'flex h-[calc(100dvh-65px)] flex-col overflow-hidden bg-[var(--color-primary-soft)] px-3 py-3'
                     : 'min-h-[calc(100vh-65px)] bg-[var(--color-primary-soft)] px-4 py-10'
             }>
@@ -579,9 +575,9 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                                     <div
                                         key={message.id}
                                         ref={message.id === lastMessageId ? lastMessageRef : undefined}>
-                                        {/* previewIngredientId(마우스오버)와 compare/favorite id 목록은 각각
-                                            ingredients/result 메시지만 실제로 쓰기 때문에, 해당 종류가 아니면
-                                            고정값을 넘겨서 마우스오버·담기 때 다른 말풍선이 리렌더되지 않게 해요. */}
+                                        {/* previewIngredientId(마우스오버)와 compare/favorite id 목록은
+                                            ingredients/result 메시지만 실제로 씀. 해당 종류 아니면 고정값
+                                            넘겨서 마우스오버/담기 때 다른 말풍선 리렌더 안 되게 함 */}
                                         <MessageBubble
                                             message={message}
                                             showChips={message.id === lastMessageId && step === 'concern'}
@@ -643,9 +639,9 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                     />
                 </div>
 
-                {/* 모바일(forceStacked)에서는 이 우측 패널 전체(계산법/비교함/선택한 조건/
-            다시 시작하기)를 채팅창 헤더의 화살표 패널 + 입력창 옆 "+" 메뉴로 옮겼어요 —
-            대화가 길어져도 카드 아래로 스크롤할 필요 없이 언제든 확인할 수 있어요. */}
+                {/* 모바일(forceStacked)에선 이 우측 패널 전체(계산법/비교함/선택한 조건/
+            다시 시작하기)를 채팅창 헤더 화살표 패널 + 입력창 옆 "+" 메뉴로 옮김.
+            대화 길어져도 카드 아래로 스크롤 없이 바로 확인 가능 */}
                 {!forceStacked && (
                     <div className="space-y-3">
                         <UtilityToolbar
@@ -765,8 +761,8 @@ function TypingBubble() {
     );
 }
 
-// memo: 키 입력·마우스오버로 ChatWindow가 리렌더돼도, props가 그대로인 기존
-// 말풍선(확정된 메시지들)은 다시 그리지 않아요. 대화가 길어질수록 효과가 커져요.
+// memo: 키 입력/마우스오버로 ChatWindow 리렌더돼도 props 그대로인 기존
+// 말풍선(확정된 메시지)은 다시 안 그림. 대화 길어질수록 효과 큼
 const MessageBubble = memo(function MessageBubble({
     message,
     showChips,
@@ -849,7 +845,7 @@ const MessageBubble = memo(function MessageBubble({
 
     if (message.kind === 'ingredients') {
         const category = getCategory(message.categoryKey);
-        // 서버가 안전 조정한 실제 목록을 우선 쓰고, 없으면(옛날 대화 기록 등) 정적 데이터로 폴백해요.
+        // 서버가 안전 조정한 실제 목록 우선, 없으면(옛날 대화 기록 등) 정적 데이터로 폴백
         const ingredientList = message.ingredients ?? category.ingredients;
         const previewBelongsHere = ingredientList.some((i) => i.id === previewIngredientId);
         const activeId = previewBelongsHere
@@ -858,11 +854,11 @@ const MessageBubble = memo(function MessageBubble({
         return (
             <div className="flex items-start gap-2.5 animate-fade-up">
                 <AiAvatar />
-                {/* 다른 텍스트 말풍선은 max-w-[80~85%]로 좁게 두지만, 여기 성분 카드
-              리스트는 ResultCard처럼 실제 박스 콘텐츠라 좁게 담으면 카드가 눌려
-              보여요. results 메시지는 이미 이 이유로 폭을 넓혔었는데, 여기는 그대로
-              85%에 남아있어서 "고민 선택 직후엔 채팅창이 좁았다가 결과가 나오면
-              갑자기 넓어지는" 것처럼 보였어요 — 두 단계 폭을 맞췄어요. */}
+                {/* 다른 텍스트 말풍선은 max-w-[80~85%]인데 성분 카드 리스트는
+              ResultCard처럼 실제 박스 콘텐츠라 좁게 담으면 카드가 눌려 보임.
+              results 메시지는 이미 이 이유로 폭 넓혔는데 여기만 85%로 남아서
+              고민 선택 직후엔 좁다가 결과 나오면 갑자기 넓어지는 것처럼 보였음.
+              그래서 두 단계 폭 맞춤 */}
                 <div className="w-full min-w-0 space-y-2.5">
                     <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-[var(--color-primary-soft)] px-4 py-3">
                         <p className="text-[13.5px] font-medium text-[var(--color-ink)]">
@@ -927,9 +923,9 @@ const MessageBubble = memo(function MessageBubble({
     return (
         <div className="flex items-start gap-2.5 animate-fade-up">
             <AiAvatar />
-            {/* 다른 메시지 말풍선은 max-w-[85~90%]로 좁게 두지만, 결과 카드 캐러셀은 그만큼
-          좁아지면 카드가 화면 중앙이 아니라 왼쪽으로 치우쳐 보이고 성분명 같은 텍스트가
-          잘려요. 그래서 이 메시지만 채팅창 폭을 거의 다 쓰도록 넓게 둬요. */}
+            {/* 다른 말풍선은 max-w-[85~90%]인데 결과 카드 캐러셀은 그만큼 좁으면
+          카드가 왼쪽으로 치우쳐 보이고 성분명 텍스트 잘림. 그래서 이 메시지만
+          채팅창 폭 거의 다 쓰게 넓힘 */}
             <div className="w-full min-w-0 space-y-3.5">
                 <div className="rounded-2xl rounded-tl-sm bg-[var(--color-primary-soft)] px-4 py-3">
                     <p className="text-[13.5px] font-medium text-[var(--color-ink)]">
@@ -949,11 +945,11 @@ const MessageBubble = memo(function MessageBubble({
                         아쉽게도 이 예산 범위에는 조건에 맞는 제품이 없어요. 다른 예산을 선택해 보시겠어요?
                     </div>
                 ) : (
-                    // 결과가 3개일 때 2열 그리드로 두면 3번째 카드가 아래로 떨어져서 세로로 길어져요.
-                    // 그래서 캐러셀로 통일했어요. 처음엔 데스크톱만 2개씩 보여줬는데, 카드 폭이
-                    // 좁아지니 "추천 이유" 문단이 더 많이 줄바꿈되면서 카드가 오히려 세로로
-                    // 길어지는 역효과가 있었어요. 그래서 모바일/데스크톱 구분 없이 카드 1개씩
-                    // 꽉 채운 폭으로 보여주고 옆으로 넘기는 방식으로 통일했어요.
+                    // 결과 3개일 때 2열 그리드면 3번째 카드가 아래로 떨어져 세로로 길어짐.
+                    // 그래서 캐러셀로 통일. 처음엔 데스크톱만 2개씩 보여줬는데 카드 폭
+                    // 좁아지니 "추천 이유" 문단 줄바꿈 늘어서 오히려 세로로 길어지는
+                    // 역효과 있었음. 결국 모바일/데스크톱 구분 없이 카드 1개씩
+                    // 풀와이드 + 옆으로 넘기는 방식으로 통일
                     <ResultCarousel
                         results={message.results}
                         ingredient={ingredient}

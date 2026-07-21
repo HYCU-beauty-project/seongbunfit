@@ -3,16 +3,15 @@ interface Props {
 }
 
 /**
- * 진짜 Mesh Gradient 라이브러리는 못 쓰지만(빌드 도구 제약), 여러 색의 블러 처리된
- * 블롭을 서로 다른 속도로 움직이게 해서 "물감이 천천히 번지는" 느낌을 CSS만으로
- * 흉내냈어요. 각 블롭은 blob-move 애니메이션을 다른 delay/duration으로 써서
- * 서로 어긋나게 움직이며 겹쳐 보이게 했어요.
+ * 진짜 Mesh Gradient 라이브러리는 빌드 도구 제약으로 못 씀.
+ * 블러 블롭 여러 개를 다른 속도로 움직여서 "물감 번지는" 느낌을 CSS로만 흉내냄.
+ * 각 블롭은 blob-move 애니메이션을 다른 delay/duration으로 줘서 어긋나게 겹침
  */
 export default function MeshGradientBg({ variant = "hero" }: Props) {
   const blobs =
     variant === "hero-dark"
       ? [
-          // 보라색 배경 위라서, 밝은 흰색/민트 톤으로 "구름이 떠 있는" 느낌만 살짝 줘요.
+          // 보라 배경 위라서 밝은 흰색/민트 톤으로 구름 뜬 느낌만 살짝
           { className: "-top-24 -left-24 h-80 w-80", color: "#ffffff", anim: "animate-blob", opacity: 0.1 },
           { className: "top-10 right-0 h-64 w-64", color: "var(--color-accent-on-dark)", anim: "animate-blob-delayed", opacity: 0.18 },
           { className: "-bottom-20 -right-10 h-72 w-72", color: "#ffffff", anim: "animate-blob-slow", opacity: 0.08 },

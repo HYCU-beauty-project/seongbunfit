@@ -17,7 +17,7 @@ function getSnapshot(key: string): string | null {
   }
 }
 
-// SSR에서는 window가 없으므로 undefined(=아직 hydrate 전)를 반환합니다.
+// SSR에선 window 없어서 undefined(=아직 hydrate 전) 반환
 function getServerSnapshot(): string | null | undefined {
   return undefined;
 }
@@ -42,8 +42,8 @@ function subscribe(key: string) {
 
 /**
  * localStorage와 동기화되는 상태 훅.
- * useSyncExternalStore를 사용해 "effect 안에서 setState 호출" 린트 이슈 없이
- * 외부 저장소(localStorage)를 안전하게 구독합니다.
+ * useSyncExternalStore 써서 "effect 안에서 setState 호출" 린트 이슈 없이
+ * 외부 저장소(localStorage) 구독함
  */
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const subscribeToKey = useMemo(() => subscribe(key), [key]);
@@ -68,8 +68,8 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     (updater: T | ((prev: T) => T)) => {
       try {
         const prevRaw = getSnapshot(key);
-        // 저장된 값이 깨진 JSON이어도 쓰기가 막히면 안 되니까, 파싱 실패는
-        // initialValue 기준으로 덮어써요.
+        // 저장된 값이 깨진 JSON이어도 쓰기가 막히면 안 되니까
+        // 파싱 실패는 initialValue 기준으로 덮어씀
         let prev = initialValue;
         if (prevRaw !== null) {
           try {

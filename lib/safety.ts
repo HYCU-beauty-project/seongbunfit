@@ -1,11 +1,10 @@
 import type { Category, Ingredient } from "@/types";
 import { getAllUniqueIngredients } from "./ingredients";
 
-// 사용자 문장에 이 표현이 있으면 "피부가 이미 자극된 상태"로 간주해요.
-// AI 분류 결과와 상관없이(=AI가 카테고리를 잘못 골라도) 항상 체크해서, 어떤
-// 카테고리로 분류되든 자극 성분이 1순위로 나가지 않게 막는 마지막 안전장치예요.
-// AI가 생성하는 문장에 의존하지 않고 코드로 직접 체크해서, 절대 빠지거나
-// 완화되지 않게 했어요.
+// 사용자 문장에 이 표현 있으면 "피부가 이미 자극된 상태"로 간주.
+// AI 분류 결과와 상관없이(AI가 카테고리 잘못 골라도) 항상 체크해서
+// 자극 성분이 1순위로 안 나가게 막는 마지막 안전장치.
+// AI 문장에 의존 안 하고 코드로 직접 체크해서 절대 빠지거나 완화 안 되게 함
 const IRRITATION_SIGNALS = [
   "따갑",
   "따가",
@@ -30,20 +29,20 @@ export function hasIrritationSignal(text: string): boolean {
   return IRRITATION_SIGNALS.some((kw) => text.includes(kw));
 }
 
-// 임신·수유를 언급하면, 문장이 어떤 카테고리로 분류되든(예: "기미"만 보고
-// 주름·탄력으로 잘못 분류되더라도) 레티놀처럼 임신 중 사용이 권장되지 않는
-// 성분(Ingredient.pregnancyUnsafe)을 항상 추천에서 제외해요. 오탐(false positive)보다
-// 놓치는(false negative) 쪽이 훨씬 위험한 항목이라, 표현을 넉넉히 잡았어요.
+// 임신·수유 언급하면 어떤 카테고리로 분류되든(예: "기미"만 보고 주름·탄력으로
+// 잘못 분류돼도) 레티놀 같은 임신 중 비권장 성분(Ingredient.pregnancyUnsafe)은
+// 항상 추천에서 제외. 오탐(false positive)보다 놓치는(false negative) 쪽이
+// 훨씬 위험한 항목이라 표현을 넉넉히 잡음
 const PREGNANCY_SIGNALS = ["임신", "임산부", "임신부", "예비맘", "예비 맘", "예비엄마", "수유", "모유"];
 
 export function hasPregnancySignal(text: string): boolean {
   return PREGNANCY_SIGNALS.some((kw) => text.includes(kw));
 }
 
-// "이 성분 썼는데 좁쌀 났어요", "히알루론산 알레르기 있어요"처럼, 사용자가 특정
-// 성분명을 직접 언급하면서 부작용·알레르기 반응을 이야기하면, 그 성분은 카테고리
-// 분류 결과와 무관하게 추천에서 제외해요. "카테고리 태그 하나만 보고 하드코딩된
-// 세트를 그대로 띄우는" 문제를 막기 위한 안전장치예요.
+// "이 성분 썼는데 좁쌀 났어요", "히알루론산 알레르기 있어요"처럼 사용자가
+// 특정 성분명 직접 언급하며 부작용·알레르기 얘기하면 그 성분은 카테고리
+// 분류 결과와 무관하게 추천에서 제외. "카테고리 태그 하나만 보고 하드코딩된
+// 세트 그대로 띄우는" 문제 막는 안전장치
 const NEGATIVE_REACTION_SIGNALS = [
   "부작용",
   "안맞",
@@ -63,9 +62,9 @@ const NEGATIVE_REACTION_SIGNALS = [
   "알러지",
 ];
 
-// DB의 성분명은 "병풀추출물"처럼 정식 명칭인데, 사용자는 "병풀"이나 마케팅에서 흔히
-// 쓰이는 "시카" 같은 축약형/별칭으로 말하는 경우가 많아요. 정식 명칭만 정확히
-// 일치시키면 이런 경우를 다 놓치게 돼서, 접미어를 뗀 형태와 알려진 별칭도 같이 확인해요.
+// DB 성분명은 "병풀추출물"처럼 정식 명칭인데 사용자는 "병풀"이나 마케팅에서
+// 흔한 "시카" 같은 축약형/별칭으로 말함. 정식 명칭만 매칭하면 다 놓쳐서
+// 접미어 뗀 형태와 알려진 별칭도 같이 확인함
 const INGREDIENT_ALIASES: Record<string, string[]> = {
   centella: ["시카", "병풀"],
 };
@@ -87,10 +86,10 @@ export function findComplainedIngredientIds(text: string): string[] {
     .map((ingredient) => ingredient.id);
 }
 
-// 사용자가 두 가지 이상의 활성 성분을 "같이/함께 쓴다"는 뉘앙스로 언급하면, 병용 시
-// 자극이 있을 수 있는 잘 알려진 조합에 한해 별도 주의 문구를 띄워요. 정확한 함량·배합
-// 판단은 저희가 할 수 없어서, "이런 조합은 순서/시간을 나눠 쓰는 게 일반적으로 권장돼요"
-// 정도로 안전하게만 안내해요 — 확정적인 의학적 조언처럼 보이지 않게 조심했어요.
+// 활성 성분 두 개 이상을 "같이/함께 쓴다" 뉘앙스로 언급하면 병용 시 자극
+// 알려진 조합에 한해 별도 주의 문구 띄움. 정확한 함량·배합 판단은 불가라서
+// "순서/시간 나눠 쓰는 게 일반적" 수준으로만 안내. 확정적인 의학적 조언처럼
+// 안 보이게 조심함
 const KNOWN_CAUTION_PAIRS: { names: [string[], string[]]; notice: string }[] = [
   {
     names: [
@@ -130,17 +129,17 @@ export interface SafetyAdjustment {
 
 /**
  * 자극 신호(이미 자극된 피부), 임신·수유, 사용자가 직접 언급한 부작용 성분, 조합
- * 주의(레티놀+비타민C 등) 중 하나라도 감지되면 해당 성분을 목록에서 아예 제거해요.
+ * 주의(레티놀+비타민C 등) 중 하나라도 감지되면 해당 성분을 목록에서 아예 제거함
  *
- * ⚠️ 예전엔 "맨 뒤로 밀어내고 캡션에 경고를 붙이는" 방식이었는데, 성분 카드가 기본
- * 접힌 상태라 caution 문구는 카드를 펼쳐야만 보여요. 그래서 목록 끝에 있어도 얼핏
- * 보기엔 다른 성분과 똑같이 "정상적으로 추천된 카드"처럼 보이는 문제가 있었어요.
- * 배너에서는 "제외했다"고 말해놓고 목록엔 그대로 있으니 모순으로 보였던 거예요.
- * 그래서 아예 목록에서 빼버리는 방식으로 바꿨어요 — 이제 제외된 성분은 카드 자체가
- * 존재하지 않고, 어떤 성분이 왜 빠졌는지는 상단 notice 배너에 이름을 콕 집어 안내해요.
+ * 예전엔 "맨 뒤로 밀고 캡션에 경고 붙이는" 방식이었는데, 성분 카드가 기본
+ * 접힌 상태라 caution 문구는 펼쳐야만 보임. 목록 끝에 있어도 얼핏 보면
+ * 정상 추천 카드처럼 보이고, 배너에선 "제외했다" 해놓고 목록엔 그대로 있어서
+ * 모순으로 보이는 문제 있었음. 그래서 아예 목록에서 빼는 방식으로 바꿈.
+ * 제외된 성분은 카드 자체가 없고, 뭐가 왜 빠졌는지는 상단 notice 배너에
+ * 이름 콕 집어 안내함
  *
- * notice는 화면에 별도 경고 박스로 항상 표시돼요 — AI가 생성하는 인사말 문장과는
- * 독립적이라, AI 응답이 이상하게 나와도 이 경고만큼은 항상 그대로 노출돼요.
+ * notice는 화면에 별도 경고 박스로 항상 표시됨. AI가 생성하는 인사말과
+ * 독립이라 AI 응답이 이상해도 이 경고만큼은 항상 그대로 노출됨
  */
 export function applySafetyAdjustment(
   category: Category,
@@ -156,8 +155,8 @@ export function applySafetyAdjustment(
 
   if (!needsAdjustment) return { category, notice: null };
 
-  // 성분 하나가 여러 이유로 걸릴 수 있어서(예: 임신 중 + 레티놀=irritant도 true),
-  // 우선순위 순으로 딱 하나의 이유만 골라요. exclusionReason이 null이 아니면 = 제외 대상.
+  // 성분 하나가 여러 이유로 걸릴 수 있어서(예: 임신 중 + 레티놀=irritant도 true)
+  // 우선순위 순으로 딱 하나의 이유만 고름. exclusionReason이 null 아니면 제외 대상
   function exclusionReason(ingredient: Ingredient): string | null {
     if (pregnant && ingredient.pregnancyUnsafe) {
       return "임신·수유 중에는 사용이 권장되지 않는 성분이에요.";
@@ -199,8 +198,8 @@ export function applySafetyAdjustment(
     excludedNames.length > 0 ? `제외된 성분: ${excludedNames.join(", ")}` : null,
   ].filter((n): n is string => Boolean(n));
 
-  // 안전한 성분이 하나도 안 남으면(극단적인 케이스 — 카테고리 성분 3개가 전부 걸림),
-  // 빈 목록을 보여주는 것보단 원래 목록을 그대로 두고 경고만 강하게 띄워요.
+  // 안전한 성분이 하나도 안 남으면(카테고리 성분 3개 전부 걸리는 극단 케이스)
+  // 빈 목록 보여주기보단 원래 목록 그대로 두고 경고만 강하게 띄움
   if (safe.length === 0) {
     return { category, notice: notices.join("\n\n") || null };
   }

@@ -22,9 +22,8 @@ export default function InteractiveScoreDemo() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          // 처음 화면에 들어올 땐 막대가 0%였다가 값까지 차오르는 걸 보여주고 싶어서,
-          // 살짝 지연을 준 다음 revealed를 true로 바꿔요(바로 true면 CSS transition이
-          // 시작점(0%)을 그릴 새도 없이 곧장 끝값으로 그려질 수 있어서요).
+          // 막대가 0%에서 값까지 차오르는 거 보여주려고 살짝 지연 후 revealed true로.
+          // 바로 true면 CSS transition이 시작점(0%) 그릴 새도 없이 끝값으로 그려질 수 있음
           const timer = setTimeout(() => setRevealed(true), 200);
           observer.disconnect();
           return () => clearTimeout(timer);

@@ -3,8 +3,8 @@ import { getProductsForIngredient } from '@/lib/products';
 
 /**
  * 최종 점수 = (핵심성분 배치점수 × 0.60) + (ml당 가격점수 × 0.30) + (예산점수 × 0.10)
- * 팀 기획서(성분핏.pdf) 기준 가중치이며, 랜딩페이지 초기 시안에 있던 50/30/20 문구와
- * 다르길래 확인 결과 60/30/10으로 최종 확정되었습니다 (2026.07.12).
+ * 팀 기획서(성분핏.pdf) 기준 가중치. 랜딩페이지 초기 시안의 50/30/20 문구와
+ * 다르길래 확인해보니 60/30/10으로 최종 확정됨 (2026.07.12)
  */
 export const SCORE_WEIGHTS = {
     placement: 0.6,
@@ -69,9 +69,9 @@ export function scoreProducts(candidates: Product[], ingredient: Ingredient, bud
 }
 
 /**
- * ⚠️ getProductsForIngredient가 이제 Supabase를 조회하는 비동기 함수라
- * 이 함수도 async로 바뀌었습니다. 호출하는 쪽(API 라우트 등)에서
- * 반드시 await getTop3(...) 형태로 사용해주세요.
+ * getProductsForIngredient가 이제 Supabase 조회하는 비동기 함수라
+ * 이 함수도 async로 바뀜. 호출하는 쪽(API 라우트 등)에서
+ * 반드시 await getTop3(...) 형태로 써야 함
  */
 export async function getTop3(ingredient: Ingredient, budget: BudgetOption): Promise<ScoredProduct[]> {
     const candidates = await getProductsForIngredient(ingredient.id);

@@ -7,7 +7,7 @@ interface Segment {
   className?: string;
 }
 
-// 한 줄은 문자열 하나(text)이거나, 서로 다르게 스타일링할 구간이 여러 개(segments)일 수 있어요.
+// 한 줄 = 문자열 하나(text) 또는 스타일 다른 구간 여러 개(segments)
 type Line = { text: string; className?: string } | { segments: Segment[] };
 
 interface Props {
@@ -30,7 +30,7 @@ export default function TypewriterHeading({ lines, speed = 45, startDelay = 150 
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    // interval을 effect 스코프에 두어야 타이핑 도중 언마운트돼도 확실히 정리돼요.
+    // interval을 effect 스코프에 둬야 타이핑 도중 언마운트돼도 확실히 정리됨
     let interval: ReturnType<typeof setInterval> | undefined;
     const startTimer = setTimeout(() => {
       let i = 0;
@@ -50,8 +50,8 @@ export default function TypewriterHeading({ lines, speed = 45, startDelay = 150 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 렌더링 중에 변수를 mutate하면 안 되니까(react-hooks/immutability), 각 줄/구간의
-  // 누적 시작 위치를 렌더 전에 미리 계산해둬요.
+  // 렌더링 중 변수 mutate 금지(react-hooks/immutability)라서
+  // 각 줄/구간의 누적 시작 위치를 렌더 전에 미리 계산해둠
   const lineStarts: number[] = [];
   let acc = 0;
   for (const line of lines) {

@@ -24,7 +24,7 @@ export default function ChatPage() {
           )}
         </div>
       ) : (
-        // ChatWindow가 useSearchParams()를 쓰므로 Suspense 경계가 없으면 빌드가 실패해요.
+        // ChatWindow가 useSearchParams() 써서 Suspense 경계 없으면 빌드 터짐
         <Suspense fallback={null}>
           <ChatWindow />
         </Suspense>

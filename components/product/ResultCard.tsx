@@ -15,9 +15,8 @@ interface Props {
     onToggleCompare?: () => void;
     isFavorite?: boolean;
     onToggleFavorite?: () => void;
-    // true면(모바일) 카드에 요약만 보여주고 막대그래프·추천 이유는 "상세보기" 눌렀을 때
-    // 바텀시트로 펼쳐요. false면(데스크톱) 예전처럼 카드 안에 전부 바로 보여줘요 —
-    // 데스크톱은 카드 폭이 넓어서 다 펼쳐놔도 카드가 지나치게 길어지지 않아요.
+    // true(모바일): 요약만 보여주고 막대그래프·추천 이유는 "상세보기" 눌러야 바텀시트로 펼침
+    // false(데스크톱): 카드 폭 넓어서 다 펼쳐도 안 길어지니까 카드 안에 전부 바로 노출
     compact?: boolean;
 }
 
@@ -40,9 +39,8 @@ export default function ResultCard({
     const pricePerMl = Math.round(product.price / product.volumeMl);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isExporting, setIsExporting] = useState(false);
-    // 카드 한 장이 화면(특히 모바일)보다 길어지면 캐러셀로 넘겨봐도 카드 전체가
-    // 한눈에 안 들어와요. 그래서 카드는 "요약"만 보여주고, 배치·가격·예산 막대그래프와
-    // 추천 이유 같은 상세 내용은 "상세보기"를 눌렀을 때 바텀시트로 펼쳐서 보여줘요.
+    // 카드가 모바일 화면보다 길어지면 캐러셀 넘겨도 한눈에 안 들어옴.
+    // 그래서 카드엔 요약만, 막대그래프·추천 이유는 "상세보기" 눌렀을 때 바텀시트로 펼침
     const [showDetail, setShowDetail] = useState(false);
 
     async function handleShare() {
@@ -57,9 +55,9 @@ export default function ResultCard({
             });
             const fileName = `성분핏-${product.brand}-${product.name}.png`;
 
-            // ⚠️ "이미지 저장" 버튼은 이름 그대로 바로 다운로드만 해요.
-            // (OS 공유창을 띄우는 navigator.share()는 CompareModal의
-            // "저장/공유" 버튼에서만 써요 — 그쪽은 문구가 공유까지 약속하니까요.)
+            // "이미지 저장" 버튼은 이름대로 다운로드만 함.
+            // navigator.share()(OS 공유창)는 CompareModal "저장/공유"에서만 씀.
+            // 그쪽은 문구가 공유까지 약속하니까
             const link = document.createElement('a');
             link.href = dataUrl;
             link.download = fileName;
@@ -77,9 +75,8 @@ export default function ResultCard({
             ref={cardRef}
             className="flex h-full flex-col rounded-xl bg-white p-3.5 shadow-[inset_0_0_0_1.5px_var(--color-border)]">
             <div className="flex items-start gap-3">
-                {/* 더미 제품이라 실사진이 없어서, 파스텔 배경(imageColor) 위에
-            공용 세럼 아이콘을 얹은 플레이스홀더를 사용해요.
-            나중에 실제 제품 사진(imageUrl)이 생기면 이 부분만 교체하면 돼요. */}
+                {/* 더미 제품이라 실사진 없음. 파스텔 배경(imageColor) + 공용 세럼 아이콘 플레이스홀더.
+            나중에 실제 사진(imageUrl) 생기면 이 부분만 교체하면 됨 */}
                 <div
                     className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-lg"
                     style={{ backgroundColor: product.imageColor }}
@@ -117,13 +114,11 @@ export default function ResultCard({
 
             {compact ? (
                 <>
-                    {/* 요약 줄: 핵심 성분·가성비 점수만 보여주고, 막대그래프·추천 이유 같은
-                상세 내용은 버튼을 눌러야 펼쳐지는 바텀시트로 옮겼어요 — 카드 높이가
-                화면(모바일)을 넘지 않아서 캐러셀에서 카드 전체가 한눈에 들어와요.
-                ⚠️ 성분명·점수·화살표를 한 줄에 다 욱여넣었더니 일부 실기기 브라우저에서
-                성분명 칸이 극단적으로 좁게 계산되어 글자가 거의 안 보이는 문제가 있었어요.
-                성분명은 그 자체로 한 줄을 통째로 쓰게 하고, 점수·상세보기는 아래 줄로
-                내려서 성분명이 다른 요소와 폭을 다툴 일이 없게 했어요. */}
+                    {/* 요약 줄: 핵심 성분·가성비 점수만. 상세는 바텀시트로 빼서
+                카드 높이가 모바일 화면 안 넘게 함.
+                성분명·점수·화살표를 한 줄에 다 넣었더니 일부 실기기에서
+                성분명 칸이 극단적으로 좁아져 글자가 안 보이는 버그 있었음.
+                그래서 성분명은 한 줄 통째로 쓰고 점수·상세보기는 아래 줄로 내림 */}
                     <button
                         type="button"
                         onClick={() => setShowDetail(true)}
@@ -138,11 +133,10 @@ export default function ResultCard({
                         <span className="mt-1.5 flex items-center justify-between gap-2">
                             <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[12.5px] font-semibold text-[var(--color-accent-text)]">
                                 <SparkleIcon />
-                                {/* ⚠️ CSS의 white-space:nowrap이 일부 기기(브라우저 접근성 설정,
-                            데이터 절약 모드 등)에서 무시되는 경우가 있어서, "가성비"와
-                            점수 사이의 일반 공백을 줄바꿈이 아예 불가능한 줄바꿈 방지
-                            공백(U+00A0)으로 바꿨어요. 이건 CSS가 아니라 글자 자체의
-                            성질이라 어떤 환경에서도 그 지점에서 줄이 안 끊겨요. */}
+                                {/* white-space:nowrap이 일부 기기(접근성 설정, 데이터 절약 모드)에서
+                            무시되는 경우 있음. 그래서 "가성비"와 점수 사이 공백을
+                            U+00A0(줄바꿈 방지 공백)으로 바꿈. CSS가 아니라 글자 자체
+                            성질이라 어떤 환경에서도 안 끊김 */}
                                 가성비{'\u00A0'}
                                 {product.finalScore}점
                             </span>
@@ -153,8 +147,7 @@ export default function ResultCard({
                         </span>
                     </button>
 
-                    {/* 남는 공간을 채워서, 카드마다 요약 줄 아래 여백이 달라도
-                아래 버튼들이 항상 같은 위치에 오게 했어요. */}
+                    {/* 남는 공간 채우기용. 카드마다 여백 달라도 아래 버튼 위치 맞추려고 */}
                     <div className="flex-1" />
                 </>
             ) : (
@@ -170,7 +163,7 @@ export default function ResultCard({
                         </span>
                     </div>
 
-                    {/* 배치·가격·예산 세 점수를 한눈에 비교할 수 있도록 애니메이션 막대그래프로 보여줘요. */}
+                    {/* 배치·가격·예산 세 점수 한눈에 비교하는 용도. 애니메이션 막대그래프 */}
                     <div className="mt-1.5 space-y-1">
                         <ScoreBar
                             label={`배치 ${product.actualPosition}번째`}
@@ -236,8 +229,7 @@ export default function ResultCard({
             </a>
         </div>
 
-        {/* 배치·가격·예산 막대그래프와 추천 이유는 카드 안에 상시 노출하지 않고,
-            "상세보기"를 눌렀을 때만 아래에서 올라오는 바텀시트로 보여줘요. */}
+        {/* 막대그래프·추천 이유는 상시 노출 안 하고 "상세보기" 눌렀을 때만 바텀시트로 */}
         {compact && showDetail && (
             <div
                 className="fixed inset-0 z-50 flex items-end justify-center bg-black/20 sm:items-center sm:px-4"

@@ -33,7 +33,7 @@ const badPoints = ['광고성 리뷰 중심', '가격 비교 불명확', '성분
 export default function MobileHomePage() {
     return (
         <main>
-            {/* Hero — 메인 보라색 배경 + 흰 글자 (웹과 통일) */}
+            {/* Hero: 메인 보라색 배경 + 흰 글자 (웹과 통일) */}
             <section className="relative -mt-[65px] overflow-hidden bg-[var(--color-primary)] px-5 pb-10 pt-[95px]">
                 <MeshGradientBg variant="hero-dark" />
 
@@ -124,7 +124,7 @@ export default function MobileHomePage() {
                 </div>
             </section>
 
-            {/* 서비스 한눈에 보기 — 2x2, 원 배경 없이 아이콘 크게 */}
+            {/* 서비스 한눈에 보기: 2x2, 원 배경 없이 아이콘 크게 */}
             <section className="mt-12 px-5">
                 <AnimateOnScroll>
                     <h2 className="text-center text-[19px] font-bold text-[var(--color-ink)]">서비스 한눈에 보기</h2>

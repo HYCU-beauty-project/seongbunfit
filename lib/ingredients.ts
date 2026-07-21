@@ -1,9 +1,9 @@
 import type { Category, Ingredient } from "@/types";
 
-// ⚠️ Supabase 연동 시 참고: 이 파일은 실제로는 ingredients 테이블이 돼요.
-// 지금은 categories 배열 안에 성분이 중첩되어 있지만(카테고리 하나당 성분 3개),
-// 실제 테이블에서는 ingredients가 독립적인 행이고 category_key 컬럼으로 연결돼요.
-// 전체 스키마는 lib/supabase/schema.sql을 참고하세요.
+// Supabase 연동 시 이 파일이 ingredients 테이블이 됨.
+// 지금은 categories 배열 안에 성분 중첩(카테고리당 3개)이지만
+// 실제 테이블에선 ingredients가 독립 행이고 category_key 컬럼으로 연결됨.
+// 전체 스키마는 lib/supabase/schema.sql 참고
 export const categories: Category[] = [
   {
     key: "wrinkle",
@@ -175,9 +175,9 @@ export const categories: Category[] = [
   },
 ];
 
-// 키워드가 하나도 안 맞으면 null을 반환합니다 (예: "안녕 오늘 날씨 어때" 같은 무관한 문장).
-// 예전엔 해시로 아무 카테고리나 강제로 골라줬는데, 그러면 "안녕"에도 "주름 고민이시군요!"
-// 라고 확신에 차서 틀린 답을 하는 문제가 있어서 없앴습니다.
+// 키워드 하나도 안 맞으면 null 반환 (예: "안녕 오늘 날씨 어때" 같은 무관한 문장).
+// 예전엔 해시로 아무 카테고리나 강제로 골랐는데, 그러면 "안녕"에도
+// "주름 고민이시군요!" 라고 확신에 차서 틀리는 문제 있어서 없앰
 export function matchCategory(input: string): Category | null {
   const normalized = input.trim();
   for (const category of categories) {
@@ -207,12 +207,12 @@ export function getIngredientInCategory(
   return getCategory(categoryKey).ingredients.find((i) => i.id === ingredientId);
 }
 
-// 특정 성분이 속한 카테고리(피부 고민) 목록 — 나이아신아마이드처럼 여러 카테고리에 걸친 성분도 있음
+// 특정 성분이 속한 카테고리(피부 고민) 목록. 나이아신아마이드처럼 여러 카테고리에 걸친 성분도 있음
 export function getCategoriesForIngredient(ingredientId: string): Category[] {
   return categories.filter((c) => c.ingredients.some((i) => i.id === ingredientId));
 }
 
-// 카테고리 간 중복(예: 나이아신아마이드)을 제거한 전체 성분 목록 — 기준위치 참고표에 사용
+// 카테고리 간 중복(예: 나이아신아마이드) 제거한 전체 성분 목록. 기준위치 참고표에 사용
 export function getAllUniqueIngredients(): Ingredient[] {
   const seen = new Map<string, Ingredient>();
   for (const category of categories) {

@@ -3,15 +3,13 @@ import IngredientTag from "@/components/IngredientTag";
 import ScoreBar from "@/components/ScoreBar";
 import ArrowRightIcon from "@/components/ArrowRightIcon";
 
-// 실제 채팅 결과 카드(components/product/ResultCard.tsx)와 최대한 똑같이 재현한
-// 목업이에요. 스크린샷이 아니라 같은 마크업/스타일을 그대로 옮겨온 거라, 실제
-// 카드 쪽 디자인이 바뀌면(즐겨찾기 별, 점수 막대그래프처럼) 여기도 같이 손봐줘야
-// 최신 상태로 유지돼요.
+// 실제 채팅 결과 카드(components/product/ResultCard.tsx) 마크업/스타일 그대로 옮긴 목업.
+// 스크린샷 아님. 실제 카드 디자인 바뀌면(즐겨찾기 별, 점수 막대그래프 등)
+// 여기도 같이 손봐야 함
 //
-// 말풍선은 카드 좌우 여백(이 섹션 그리드에서 카드 옆에 남는 공간) 안에 두고,
-// 설명하는 줄과 같은 높이(%)에 맞춘 다음 카드 쪽을 가리키는 작은 꼬리표를
-// 달았어요. SVG로 긴 점선을 그려 연결하는 방식은 다른 섹션까지 새는 렌더링
-// 버그가 있어서(카드 안에서만 움직이는 이 방식이 훨씬 안전해요) 걷어냈어요.
+// 말풍선은 카드 좌우 여백에 두고 설명 줄과 같은 높이(%)로 맞춘 뒤
+// 카드 쪽 가리키는 꼬리표 달음. SVG 긴 점선으로 연결하는 방식은
+// 다른 섹션까지 새는 렌더링 버그 있어서 걷어냄
 export default function ResultUIShowcase() {
   return (
     <div className="relative mx-auto max-w-[340px]">

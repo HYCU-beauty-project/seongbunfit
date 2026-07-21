@@ -23,8 +23,7 @@ export default function ProductDetailModal({ product, isBestValue = false, onClo
             <div
                 onClick={(e) => e.stopPropagation()}
                 className="animate-fade-up flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-                {/* 더미 제품이라 실사진이 없어서, 파스텔 배경(imageColor) 위에
-            공용 세럼 아이콘을 얹은 플레이스홀더를 사용해요. */}
+                {/* 더미 제품이라 실사진 없음. 파스텔 배경(imageColor) + 공용 세럼 아이콘 플레이스홀더 */}
                 <div
                     className="flex h-40 w-full shrink-0 items-center justify-center"
                     style={{ backgroundColor: product.imageColor }}

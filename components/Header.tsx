@@ -5,9 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 
 interface Props {
-  // 랜딩페이지처럼 보라색 히어로 위에 얹혀서, 스크롤 전엔 투명+흰 글자로 떠 있다가
-  // 히어로를 벗어나면 원래 흰 배경 헤더로 바뀌는 모드예요. 다른 페이지는 이 prop 없이
-  // 지금까지처럼 항상 흰 배경 고정 헤더로 동작해요.
+  // 랜딩 히어로 위에 얹히는 모드. 스크롤 전엔 투명+흰 글자,
+  // 히어로 벗어나면 흰 배경 헤더로 전환.
+  // 다른 페이지는 이 prop 없이 항상 흰 배경 고정 헤더
   transparentOverHero?: boolean;
 }
 
@@ -69,7 +69,7 @@ export default function Header({ transparentOverHero = false }: Props) {
             성분핏
           </Link>
 
-          {/* 데스크톱 폭(md 이상)에서만 가로 메뉴 전체를 보여줘요 */}
+          {/* 데스크톱 폭(md 이상)에서만 가로 메뉴 전체 노출 */}
           <nav
             className={`hidden md:flex items-center gap-5 text-[13px] transition-colors ${
               floating ? "text-white/85" : "text-[var(--color-ink-soft)]"
@@ -92,7 +92,7 @@ export default function Header({ transparentOverHero = false }: Props) {
             </Link>
           </nav>
 
-          {/* md 미만(창을 좁혔을 때, 태블릿 폭 등)에서는 햄버거로 대체해요 */}
+          {/* md 미만(좁은 창, 태블릿 폭)에선 햄버거로 대체 */}
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
@@ -131,11 +131,9 @@ export default function Header({ transparentOverHero = false }: Props) {
           </nav>
         )}
       </header>
-      {/* fixed 헤더는 문서 흐름에서 빠지니까, 아래 콘텐츠가 헤더 밑에 깔리지 않도록
-          항상 같은 높이만큼 자리를 대신 차지해줘요(스크롤 상태에 따라 넣었다 뺐다 하면
-          그 순간 화면이 갑자기 밀리는 버그가 생겨서, 항상 고정으로 넣어요). 히어로
-          섹션 쪽에서 이 높이만큼 음수 마진(-mt-[65px])을 줘서 화면 맨 위까지 차게
-          보이도록 상쇄시켜요. */}
+      {/* fixed 헤더는 문서 흐름에서 빠져서 헤더 높이만큼 자리 차지용 div 필요.
+          스크롤 상태 따라 넣었다 뺐다 하면 화면 확 밀리는 버그 있어서 항상 고정으로 넣음.
+          히어로 쪽에서 -mt-[65px] 음수 마진으로 상쇄해서 맨 위까지 차 보이게 함 */}
       {transparentOverHero && <div className="h-[65px]" aria-hidden />}
     </>
   );

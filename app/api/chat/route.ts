@@ -6,21 +6,19 @@ import { applySafetyAdjustment } from "@/lib/safety";
 import { mockLatency } from "@/lib/mockLatency";
 import { getClientIp, isRateLimited } from "@/lib/rateLimit";
 
-// 사용자 고민 문장의 최대 길이. 이보다 길면 정상 입력이 아니라 프롬프트 크기를
-// 부풀리는 남용에 가까워서(토큰 비용·지연 증폭) 서버에서 거절해요.
+// 고민 문장 최대 길이. 이보다 길면 프롬프트 부풀리는 남용에 가까움
+// (토큰 비용·지연 증폭) → 서버에서 거절
 const MAX_TEXT_LENGTH = 500;
 
 /**
- * POST /api/chat — 피부 고민 텍스트를 받아 카테고리를 분류하고 성분 목록을 돌려줘요.
+ * POST /api/chat: 피부 고민 텍스트 받아서 카테고리 분류 + 성분 목록 응답
  *
- * 지금은 진짜 백엔드 없이, 이 라우트 자체가 "Mock API" 역할을 해요 — lib/ingredients.ts의
- * 더미 데이터를 그대로 응답으로 돌려주기 때문에, 프론트엔드(ChatWindow.tsx)는 이 응답
- * 형태(shape)만 보고 완전히 독립적으로 테스트할 수 있어요. 실제 백엔드가 붙어도
- * 이 응답 shape({categoryKey, label, intro, ingredients, safetyNotice, usedAi})는
- * 그대로 유지하면 프론트 코드를 거의 안 고쳐도 돼요.
+ * 아직 진짜 백엔드 없음. 이 라우트가 Mock API 역할로 lib/ingredients.ts 더미 데이터를
+ * 그대로 돌려줌. 프론트(ChatWindow.tsx)는 응답 shape만 보고 독립 테스트 가능.
+ * 나중에 실제 백엔드 붙어도 shape({categoryKey, label, intro, ingredients,
+ * safetyNotice, usedAi})만 유지하면 프론트 거의 안 고쳐도 됨
  *
- * 로딩 상태 테스트: .env.local에 MOCK_LATENCY_MS=2000을 넣으면 인위적으로 지연을
- * 줄 수 있어요(lib/mockLatency.ts).
+ * 로딩 테스트: .env.local에 MOCK_LATENCY_MS=2000 넣으면 지연 걸림 (lib/mockLatency.ts)
  */
 export async function POST(req: NextRequest) {
   try {
@@ -32,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     await mockLatency();
-    // 본문이 JSON이 아니면 500이 아니라 400으로 응답해요.
+    // 본문이 JSON 아니면 500 말고 400으로
     const body = await req.json().catch(() => null);
     const text = typeof body?.text === "string" ? body.text : "";
 
@@ -58,9 +56,9 @@ export async function POST(req: NextRequest) {
 
     const rawCategory = getCategory(categoryKey);
 
-    // 안전장치: 자극 신호(이미 자극된 피부)나 조합 주의(레티놀+비타민C 등) 둘 중
-    // 하나라도 감지되면, 자극 성분이 "추천" 배지를 달고 1순위로 나가지 않게 조정하고
-    // 경고 문구를 추가해요. AI 분류 결과와 상관없이 항상 체크하는 마지막 안전장치예요.
+    // 자극 신호(이미 자극된 피부)나 조합 주의(레티놀+비타민C 등) 감지되면
+    // 자극 성분이 "추천" 배지 달고 1순위로 안 나가게 조정 + 경고 문구 추가.
+    // AI 분류 결과와 상관없이 항상 도는 마지막 안전장치임
     const { category, notice } = applySafetyAdjustment(rawCategory, text);
 
     const intro = await generateIntro(text, category);

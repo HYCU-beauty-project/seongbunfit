@@ -38,13 +38,13 @@ export default function LandingPage() {
         <main className="min-h-screen bg-white">
             <Header transparentOverHero />
 
-            {/* Hero — 메인 보라색 배경 + 흰 글자로 임팩트 있게 */}
+            {/* Hero: 메인 보라색 배경 + 흰 글자로 임팩트 */}
             <section className="relative -mt-[65px] overflow-hidden bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-hover)]">
                 <MeshGradientBg variant="hero-dark" />
 
-                {/* 배경에 실제 세럼 사진을 흐리게 오버레이해서 질감을 줘요. 사진의 밝은
-            하이라이트가 글자와 겹치면 흰 글자가 묻혀서, brightness를 낮추고 텍스트가
-            있는 좌측에 어두운 그라데이션을 한 겹 더 깔아 항상 읽히게 했어요. */}
+                {/* 세럼 사진 흐리게 오버레이해서 질감 줌. 밝은 하이라이트가 흰 글자
+            묻히게 해서 brightness 낮추고 텍스트 있는 좌측에 어두운 그라데이션
+            한 겹 더 깔아서 항상 읽히게 함 */}
                 <div className="pointer-events-none absolute inset-0 opacity-[0.16] mix-blend-luminosity">
                     <Image
                         src="/images/hero-serum.jpg"
@@ -95,17 +95,17 @@ export default function LandingPage() {
                         </AnimateOnScroll>
                     </div>
 
-                    {/* 아이콘 마퀴를 헤더/다른 섹션들과 같은 max-w-5xl 컨테이너 안에 둬서,
-              우측 끝이 헤더의 "AI 추천받기" 버튼 라인과 정확히 맞도록 했어요
-              (전엔 히어로만 더 넓은 컨테이너를 써서 안쪽 정렬이 어긋나 있었어요). */}
+                    {/* 아이콘 마퀴를 헤더랑 같은 max-w-5xl 컨테이너 안에 둬서
+              우측 끝이 헤더 "AI 추천받기" 버튼 라인과 맞게 함
+              (전엔 히어로만 더 넓은 컨테이너라 정렬 어긋나 있었음) */}
                     <div className="pointer-events-none absolute right-6 top-1/2 hidden w-2/5 -translate-y-1/2 md:block">
                         <IconMarquee />
                     </div>
                 </div>
 
-                {/* 아래 흰 배경 섹션으로 부드럽게 이어지는 곡선 경계 — 화살표보다 먼저 그려서
-            화살표가 파도 위에 항상 보이게 했어요(전엔 순서가 반대라 화살표가 파도에 가려
-            깜빡이는 것처럼 보였어요). */}
+                {/* 아래 흰 섹션으로 이어지는 곡선 경계. 화살표보다 먼저 그려서
+            화살표가 파도 위에 항상 보이게 함 (순서 반대면 화살표가 파도에 가려
+            깜빡이는 것처럼 보임) */}
                 <svg
                     aria-hidden
                     viewBox="0 0 1440 60"
@@ -237,7 +237,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Compare — 텍스트 나열 대신 실제 결과 화면 목업 + 말풍선 설명 */}
+            {/* Compare: 텍스트 나열 대신 실제 결과 화면 목업 + 말풍선 설명 */}
             <section className="bg-[var(--color-primary-soft)]/50 py-16">
                 <div className="mx-auto max-w-5xl px-6 grid gap-10 md:grid-cols-[0.85fr_1.15fr] md:items-start">
                     <AnimateOnScroll>
@@ -273,7 +273,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Scoring formula — 도넛 차트 */}
+            {/* Scoring formula: 도넛 차트 */}
             <section className="py-14">
                 <div className="mx-auto max-w-3xl px-6 text-center">
                     <AnimateOnScroll>

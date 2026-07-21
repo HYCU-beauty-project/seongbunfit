@@ -7,13 +7,12 @@ interface Props {
   value: number; // 0~100
   sublabel?: string;
   color?: string; // CSS 변수 또는 색상값
-  delay?: number; // ms — 여러 막대를 순차적으로 채울 때 사용
+  delay?: number; // ms. 여러 막대 순차적으로 채울 때 씀
   size?: "sm" | "md";
 }
 
-// 계산법 설명, 추천 카드, 비교함 등 여러 곳에서 재사용하는 애니메이션 막대그래프예요.
-// 마운트될 때(=모달이 열리거나 카드가 화면에 나타날 때) 0%에서 실제 점수까지 차오르도록
-// CSS transition만으로 구현했어요(추가 라이브러리 없음).
+// 계산법 설명, 추천 카드, 비교함 등에서 재사용하는 애니메이션 막대그래프.
+// 마운트 시(모달 열림, 카드 등장) 0%에서 점수까지 차오름. CSS transition만 씀, 라이브러리 없음
 export default function ScoreBar({
   label,
   value,

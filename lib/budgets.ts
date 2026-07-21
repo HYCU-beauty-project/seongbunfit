@@ -11,7 +11,7 @@ export function getBudget(id: string): BudgetOption {
   return budgetOptions.find((b) => b.id === id) ?? budgetOptions[1];
 }
 
-// API 입력 검증용 — 미지의 id를 조용히 "1~2만원"으로 바꾸지 않고 undefined를 돌려줘요.
+// API 입력 검증용. 미지의 id를 조용히 "1~2만원"으로 안 바꾸고 undefined 돌려줌
 export function findBudget(id: string): BudgetOption | undefined {
   return budgetOptions.find((b) => b.id === id);
 }

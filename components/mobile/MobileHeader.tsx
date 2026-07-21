@@ -9,8 +9,8 @@ import MobileDrawer from "./MobileDrawer";
 export default function MobileHeader() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
-  // /mobile 홈(랜딩)에서만 히어로 위에 얹히는 투명 모드를 써요. 다른 /mobile/* 페이지는
-  // 지금까지처럼 항상 흰 배경 고정 헤더예요.
+  // /mobile 홈(랜딩)에서만 히어로 위 투명 모드.
+  // 다른 /mobile/* 페이지는 항상 흰 배경 고정 헤더
   const transparentOverHero = pathname === "/mobile";
   const [scrolled, setScrolled] = useState(!transparentOverHero);
 
@@ -67,8 +67,8 @@ export default function MobileHeader() {
           </button>
         </div>
       </header>
-      {/* fixed 헤더가 문서 흐름에서 빠지는 만큼, 항상 같은 높이의 빈 공간을 넣어두고
-          랜딩페이지 히어로 쪽에서 음수 마진으로 상쇄시켜요(웹이랑 같은 패턴이에요). */}
+      {/* fixed 헤더가 문서 흐름에서 빠지는 만큼 같은 높이 빈 공간 넣고
+          히어로 쪽 음수 마진으로 상쇄. 웹이랑 같은 패턴 */}
       {transparentOverHero && <div className="h-[65px]" aria-hidden />}
       <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </>
