@@ -360,7 +360,9 @@ seongbunfit/
 │
 ├── 📖 docs/
 │   ├── FEEDBACK.md                교수님 피드백 반영 정리
-│   └── RESEARCH.md                논문 기반 학술적 근거 매핑
+│   ├── RESEARCH.md                논문 기반 학술적 근거 매핑
+│   ├── RELATED_WORK.md            유사 서비스·선행 연구 조사
+│   └── PROPOSAL_SKIN_PROFILE.md   피부타입 프로필 제안서
 │
 └── middleware.ts                  모바일 UA → /mobile/* 리다이렉트
 ```
