@@ -3,8 +3,18 @@ import { analyzeSkinConcern } from "@/lib/gemini/analyzer";
 import { generateIntro } from "@/lib/gemini/intro";
 import { getCategory } from "@/lib/ingredients";
 import { applySafetyAdjustment } from "@/lib/safety";
+import { applySkinTypePreference, type SkinProfile } from "@/lib/skinProfile";
 import { mockLatency } from "@/lib/mockLatency";
 import { getClientIp, isRateLimited } from "@/lib/rateLimit";
+
+// body에서 온 skinProfile이 실제 유효한 형태인지 확인. 이상하면 무시하고 진행
+function parseSkinProfile(raw: unknown): SkinProfile | null {
+  if (!raw || typeof raw !== "object") return null;
+  const p = raw as Record<string, unknown>;
+  const base = p.baseType;
+  if (base !== "dry" && base !== "oily" && base !== "combination") return null;
+  return { baseType: base, sensitive: p.sensitive === true };
+}
 
 // 고민 문장 최대 길이. 이보다 길면 프롬프트 부풀리는 남용에 가까움
 // (토큰 비용·지연 증폭) → 서버에서 거절
@@ -59,7 +69,12 @@ export async function POST(req: NextRequest) {
     // 자극 신호(이미 자극된 피부)나 조합 주의(레티놀+비타민C 등) 감지되면
     // 자극 성분이 "추천" 배지 달고 1순위로 안 나가게 조정 + 경고 문구 추가.
     // AI 분류 결과와 상관없이 항상 도는 마지막 안전장치임
-    const { category, notice } = applySafetyAdjustment(rawCategory, text);
+    const { category: safeCategory, notice } = applySafetyAdjustment(rawCategory, text);
+
+    // 안전장치 "다음"에 피부타입 재정렬. 순서 고정 중요:
+    // 안전(제거) > 피부타입(재정렬) 순이라 피부타입이 안전 제외를 못 되돌림
+    const profile = parseSkinProfile(body?.skinProfile);
+    const { category, notice: skinTypeNotice } = applySkinTypePreference(safeCategory, profile);
 
     const intro = await generateIntro(text, category);
 
@@ -67,6 +82,7 @@ export async function POST(req: NextRequest) {
       categoryKey: category.key,
       label: category.label,
       intro,
+      skinTypeNotice,
       ingredients: category.ingredients,
       safetyNotice: notice,
       usedAi,

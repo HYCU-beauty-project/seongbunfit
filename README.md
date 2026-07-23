@@ -52,10 +52,27 @@
 </td>
 <td width="50%" valign="top">
 
+### 🧴 피부타입 맞춤
+설문 4문항으로 피부타입(지성/건성/복합·민감도)을 진단.
+저장하면 채팅 추천에서 **내 피부에 맞춰 성분 순서를 재정렬**
+(안전장치 → 피부타입 순서 고정으로 안전 제외는 유지).
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
 ### 🧮 계산법 투명 공개
 "가성비 계산법 보기" 버튼 하나로 공식 + 실제 계산값
 (배치/가격/예산 점수)을 `ScoreBar` 애니메이션으로 공개.
 **블랙박스 없는 추천**이 핵심 차별점.
+
+</td>
+<td valign="top">
+
+### 📸 결과 저장/공유
+추천 카드를 `html-to-image`로 PNG 캡처.
+모바일은 Web Share API 공유 시트, 데스크톱은 다운로드.
 
 </td>
 </tr>
@@ -78,13 +95,6 @@
 </td>
 </tr>
 <tr>
-<td valign="top">
-
-### 📸 결과 저장/공유
-추천 카드를 `html-to-image`로 PNG 캡처.
-모바일은 Web Share API 공유 시트, 데스크톱은 다운로드.
-
-</td>
 <td valign="top">
 
 ### 📱 모바일 전용 UX
@@ -214,6 +224,26 @@ npm run consistency  # 검증 스크립트 실행
 
 ---
 
+## 🔬 학술적 근거
+
+성분핏의 개인화 설계는 관련 논문 3편에 근거합니다. 상세 매핑은 [`docs/RESEARCH.md`](docs/RESEARCH.md) 참고.
+
+| 성분핏 기능 | 논문 | 개념 |
+|---|---|---|
+| 피부타입 설문 | Gao 2021 (대화형 추천 서베이) | Question-based Preference Elicitation (attribute 질문) |
+| 신규 사용자 대응 | Gao 2021 | Cold-start |
+| 프로필을 추천 피처로 | Lin 2023 (LLM×추천 서베이) | User-level Feature Augmentation (KAR/CUP) |
+| 👍/👎 피드백 루프 *(설계)* | Gao 2021 | Interactive Rec / Exploitation-Exploration |
+| **refPosition 배치 점수** | **CPDat 2018 (EPA 성분 DB)** | 퍼스널케어 함량 내림차순 기재 의무 → 순서로 함량 예측 |
+| 데이터 확보(공공 DB) | CPDat 2018 | EPA CompTox 공개 성분·함량 DB |
+| AI는 분류·설명만 | Lin 2023 | LLM as Feature Engineering (환각 회피) |
+
+> 💡 **핵심**: 성분핏이 "전성분 기재 순서로 함량을 추정"하는 접근은 EPA 연구진이 CPDat에서
+> 실제로 쓴 방법과 같습니다 — *"퍼스널케어 제품은 법적으로 함량 내림차순 기재 의무가 있어,
+> 기재 순서에 모델을 적용해 함량을 예측했다"*. 임의 발상이 아니라 학술적으로 검증된 방법론입니다.
+
+---
+
 ## 🗄️ 데이터 확보 전략
 
 > **원칙: 크롤링 배제.** 올리브영·쿠팡은 약관상 크롤링 금지 조항(법적 리스크), 화해는 API 미공개.
@@ -292,7 +322,8 @@ seongbunfit/
 │   ├── page.tsx                   랜딩 (데스크톱)
 │   ├── chat/                      AI 채팅 추천
 │   ├── products/                  제품 탐색 (검색·필터·정렬)
-│   ├── faq/ · notice/ · terms/ · contact/ · event/ · face-analysis/
+│   ├── skin-profile/              피부타입 진단 설문
+│   ├── faq/ · notice/ · terms/ · contact/ · event/
 │   ├── mobile/                    📱 모바일 전용 트리 (위 페이지들과 1:1 대응)
 │   ├── globals.css                디자인 토큰 + 애니메이션 (웹·모바일 공용)
 │   └── api/
@@ -312,6 +343,7 @@ seongbunfit/
 │   ├── scoring/calculator.ts      💰 가성비 산식 (60/30/10)
 │   ├── gemini/                    analyzer(분류) · intro(인사말) · reasoning(추천 이유)
 │   ├── safety.ts                  자극 성분·병용 주의 안전장치
+│   ├── skinProfile.ts             피부타입 설문·판정·성분 재정렬
 │   ├── rateLimit.ts               IP 레이트리밋
 │   ├── ingredients.ts             성분 데이터 + refPosition
 │   ├── products.ts · budgets.ts   더미 제품 · 예산 구간
@@ -327,7 +359,8 @@ seongbunfit/
 │   └── consistency-check.mjs      AI 분류 일관성 검증 (npm run consistency)
 │
 ├── 📖 docs/
-│   └── FEEDBACK.md                교수님 피드백 반영 정리
+│   ├── FEEDBACK.md                교수님 피드백 반영 정리
+│   └── RESEARCH.md                논문 기반 학술적 근거 매핑
 │
 └── middleware.ts                  모바일 UA → /mobile/* 리다이렉트
 ```

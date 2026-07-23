@@ -14,7 +14,7 @@ interface Props {
 const LINKS = [
   { href: "/#service", label: "서비스 소개" },
   { href: "/products", label: "화장품 검색" },
-  { href: "/face-analysis", label: "안면인식" },
+  { href: "/skin-profile", label: "피부타입" },
   { href: "/notice", label: "공지사항" },
   { href: "/event", label: "이벤트" },
   { href: "/faq", label: "FAQ" },

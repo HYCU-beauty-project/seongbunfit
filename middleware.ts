@@ -8,7 +8,7 @@ const MOBILE_REDIRECT_MAP: Record<string, string> = {
   "/chat": "/mobile/chat",
   "/contact": "/mobile/contact",
   "/event": "/mobile/event",
-  "/face-analysis": "/mobile/face-analysis",
+  "/skin-profile": "/mobile/skin-profile",
   "/faq": "/mobile/faq",
   "/notice": "/mobile/notice",
   "/products": "/mobile/products",

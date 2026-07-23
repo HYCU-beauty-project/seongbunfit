@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { categories, getCategory, getIngredientInCategory } from '@/lib/ingredients';
 import { budgetOptions, getBudget, parseBudgetText } from '@/lib/budgets';
 import { useLocalStorage } from '@/lib/useLocalStorage';
+import type { SkinProfile } from '@/lib/skinProfile';
 import type {
     ChatMessage,
     SelectedConditions,
@@ -56,6 +57,10 @@ const initialCompareItems: CompareItem[] = [];
 const initialFavoriteItems: FavoriteItem[] = [];
 const EMPTY_IDS: string[] = [];
 
+// 피부타입 프로필 localStorage 키. /skin-profile 페이지가 저장하고 여기서 읽음.
+// 없으면 null (프로필 설정 안 한 상태)
+const initialSkinProfile: SkinProfile | null = null;
+
 // 함수 참조는 고정하고 최신 구현 호출하는 용도. memo된 MessageBubble에
 // 넘기는 핸들러 참조가 렌더마다 바뀌면 memo 무력화돼서 이렇게 함
 function useStableCallback<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => R {
@@ -94,6 +99,10 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
     const [favoriteItems, setFavoriteItems, favoriteHydrated] = useLocalStorage<FavoriteItem[]>(
         'ingredientfit:favorites',
         initialFavoriteItems,
+    );
+    const [skinProfile] = useLocalStorage<SkinProfile | null>(
+        'ingredientfit:skinProfile',
+        initialSkinProfile,
     );
     const scrollRef = useRef<HTMLDivElement>(null);
     const headerConditionsRef = useRef<HTMLDivElement>(null);
@@ -180,7 +189,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text }),
+                body: JSON.stringify({ text, skinProfile }),
             });
             // 서버 오류를 "지원하지 않는 질문" 안내로 오인하면 안 돼서 여기서 거름
             if (!res.ok) throw new Error(`chat api ${res.status}`);
@@ -202,6 +211,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         intro?: string;
         ingredients?: unknown;
         safetyNotice?: string;
+        skinTypeNotice?: string;
     }) {
         if (typeof data.clarifyingQuestion === 'string' && data.clarifyingQuestion) {
             // 너무 막연한 문장이면 카테고리 억지로 고르는 대신 되물어봄.
@@ -241,6 +251,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
         const intro = typeof data.intro === 'string' ? data.intro : undefined;
         const ingredients = Array.isArray(data.ingredients) ? data.ingredients : undefined;
         const safetyNotice = typeof data.safetyNotice === 'string' ? data.safetyNotice : undefined;
+        const skinTypeNotice = typeof data.skinTypeNotice === 'string' ? data.skinTypeNotice : undefined;
 
         setMessages((prev) => [
             ...prev,
@@ -252,6 +263,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                 intro,
                 ingredients,
                 safetyNotice,
+                skinTypeNotice,
                 usedAi,
                 createdAt: Date.now(),
             },
@@ -374,7 +386,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text }),
+                body: JSON.stringify({ text, skinProfile }),
             });
             if (!res.ok) return false;
             const data = await res.json();
@@ -600,6 +612,7 @@ export default function ChatWindow({ forceStacked = false }: ChatWindowProps) {
                                             }
                                             onToggleFavorite={stableToggleFavorite}
                                             forceStacked={forceStacked}
+                                            hasSkinProfile={skinProfile !== null}
                                             onCategoryChip={stableCategoryChip}
                                             onIngredientSelect={stableIngredientSelect}
                                             onBudgetChip={stableBudgetSelect}
@@ -773,6 +786,7 @@ const MessageBubble = memo(function MessageBubble({
     favoriteIds,
     onToggleFavorite,
     forceStacked,
+    hasSkinProfile,
     onCategoryChip,
     onIngredientSelect,
     onBudgetChip,
@@ -787,6 +801,7 @@ const MessageBubble = memo(function MessageBubble({
     favoriteIds: string[];
     onToggleFavorite: (product: ScoredProduct, ingredientName: string, categoryLabel: string) => void;
     forceStacked: boolean;
+    hasSkinProfile: boolean;
     onCategoryChip: (categoryKey: CategoryKey) => void;
     onIngredientSelect: (categoryKey: CategoryKey, ingredientId: string, ingredientName: string) => void;
     onBudgetChip: (budgetId: string) => void;
@@ -869,6 +884,21 @@ const MessageBubble = memo(function MessageBubble({
                         <div className="rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-3 text-[12px] leading-relaxed text-amber-900">
                             {message.safetyNotice}
                         </div>
+                    )}
+                    {message.skinTypeNotice ? (
+                        // 피부타입 반영해서 순서 바꿨을 때. safety(앰버)랑 구분되게 보라 톤
+                        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-primary-soft)] px-3.5 py-3 text-[12px] leading-relaxed text-[var(--color-ink-soft)]">
+                            {message.skinTypeNotice}
+                        </div>
+                    ) : (
+                        !hasSkinProfile && (
+                            // 프로필 없으면 설정 유도. 있는데 재정렬 안 된 경우(전부 동점)엔 안 뜸
+                            <a
+                                href={forceStacked ? '/mobile/skin-profile' : '/skin-profile'}
+                                className="block rounded-xl border border-dashed border-[var(--color-border)] px-3.5 py-3 text-[12px] leading-relaxed text-[var(--color-ink-soft)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors">
+                                💡 피부타입을 설정하면 내 피부에 맞춰 성분 순서를 더 정확하게 추천해드려요.
+                            </a>
+                        )
                     )}
                     <div className="space-y-2">
                         {ingredientList.map((ingredient) => (

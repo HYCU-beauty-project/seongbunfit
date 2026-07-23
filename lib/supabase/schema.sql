@@ -68,13 +68,37 @@ create table skin_analyses (
   category_key text not null,
   ingredient_id text references ingredients(id),
   budget_id text,
+  skin_base_type text,                 -- 그때 피부타입 프로필 (dry/oily/combination)
+  skin_sensitive boolean,              -- 민감성 여부
   recommended_product_ids text[],      -- TOP3 제품 id 배열
   created_at timestamptz default now()
 );
 create index idx_skin_analyses_user on skin_analyses(user_id);
 
+-- 5. recommendation_feedback: 추천 결과에 대한 사용자 피드백
+-- Gao 2021 대화형 추천 서베이의 "인터랙티브 추천"에서 각 추천 뒤에 오는
+-- feedback signal(만족/불만족)을 저장하는 테이블. 지금은 미적용 청사진이고,
+-- 실제로는 프론트에서 localStorage로 먼저 수집한 뒤 로그인 붙으면 여기로 옮김.
+-- 사용자가 쌓이면 "이 성분+피부타입 조합의 만족도" 전역 신호로 집계해서
+-- 추천 알고리즘 개선에 씀 (지금은 개인별 재순위까지만 설계)
+create table recommendation_feedback (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,  -- 비로그인은 null
+  session_key text,                    -- 비로그인 익명 id (localStorage 발급)
+  category_key text not null,
+  ingredient_id text references ingredients(id),
+  budget_id text,
+  product_id text,                     -- 어떤 제품 추천에 대한 평가인지
+  skin_base_type text,                 -- 그때 프로필 (dry/oily/combination)
+  skin_sensitive boolean,
+  satisfied boolean not null,          -- 👍 true / 👎 false
+  created_at timestamptz default now()
+);
+create index idx_feedback_user on recommendation_feedback(user_id);
+create index idx_feedback_ingredient on recommendation_feedback(ingredient_id);
+
 -- ============================================================================
--- 5. Row Level Security (RLS)
+-- 6. Row Level Security (RLS)
 -- ============================================================================
 -- anon key는 NEXT_PUBLIC_ 환경변수라 브라우저에 그대로 노출됨. RLS 없으면
 -- 그 키만으로 누구나 모든 테이블 읽고 "쓰고 지울 수" 있어서, 테이블 만들 때
@@ -84,12 +108,13 @@ create index idx_skin_analyses_user on skin_analyses(user_id);
 --  - 카탈로그 테이블(ingredients/products/product_ingredients): 누구나 읽기만 가능.
 --    쓰기 정책을 아예 안 만들면 anon/authenticated의 insert/update/delete는
 --    전부 거부됨. 데이터 입력은 service role 키(RLS 우회, 서버 전용)로만 함
---  - skin_analyses: 본인(auth.uid() = user_id) 기록만 조회/저장 가능
+--  - skin_analyses / recommendation_feedback: 본인(auth.uid() = user_id) 기록만 조회/저장
 
 alter table ingredients enable row level security;
 alter table products enable row level security;
 alter table product_ingredients enable row level security;
 alter table skin_analyses enable row level security;
+alter table recommendation_feedback enable row level security;
 
 create policy "ingredients_public_read"
   on ingredients for select
@@ -109,6 +134,14 @@ create policy "skin_analyses_owner_select"
 
 create policy "skin_analyses_owner_insert"
   on skin_analyses for insert
+  with check (auth.uid() = user_id);
+
+create policy "feedback_owner_select"
+  on recommendation_feedback for select
+  using (auth.uid() = user_id);
+
+create policy "feedback_owner_insert"
+  on recommendation_feedback for insert
   with check (auth.uid() = user_id);
 
 -- ============================================================================

@@ -6,7 +6,7 @@ const LINKS = [
   { href: "/mobile", label: "홈" },
   { href: "/mobile/chat", label: "AI 상담" },
   { href: "/mobile/products", label: "화장품 검색" },
-  { href: "/mobile/face-analysis", label: "안면인식" },
+  { href: "/mobile/skin-profile", label: "피부타입" },
   { href: "/mobile/notice", label: "공지사항" },
   { href: "/mobile/event", label: "이벤트" },
   { href: "/mobile/faq", label: "FAQ" },

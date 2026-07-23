@@ -226,12 +226,12 @@ export default function MobileHomePage() {
                 </AnimateOnScroll>
             </section>
 
-            {/* 얼굴 피부 진단 티저 */}
+            {/* 피부타입 진단 티저 */}
             <section className="border-t border-[var(--color-border)] px-5 py-9">
                 <AnimateOnScroll>
                     <div className="flex flex-col items-center text-center gap-4">
                         <Link
-                            href="/mobile/face-analysis"
+                            href="/mobile/skin-profile"
                             className="group relative flex h-20 w-20 shrink-0 items-center justify-center">
                             <span
                                 aria-hidden
@@ -258,20 +258,20 @@ export default function MobileHomePage() {
                             </div>
                         </Link>
                         <div>
-                            <span className="inline-block rounded-full bg-gray-100 px-2.5 py-1 text-[10.5px] font-medium text-[var(--color-ink-faint)]">
-                                개발 중 · 곧 만나요
+                            <span className="inline-block rounded-full bg-[var(--color-primary-soft)] px-2.5 py-1 text-[10.5px] font-medium text-[var(--color-primary)]">
+                                내 피부 맞춤
                             </span>
                             <h2 className="mt-2.5 text-[17px] font-bold text-[var(--color-ink)]">
-                                카메라로 찍기만 하면, AI가 피부를 진단해드려요
+                                4가지 질문으로 내 피부타입을 진단해드려요
                             </h2>
                             <p className="mt-2 text-[12px] text-[var(--color-ink-soft)] leading-relaxed">
-                                촬영 환경에 따라 결과가 달라질 수 있어 참고용으로만 활용해주세요. 모바일에서는 카메라
-                                권한이 필요해요.
+                                지성·건성·복합성에 민감도까지 간단히 진단하고, 저장하면 채팅 추천에서 내 피부에 맞춰
+                                성분 순서를 조정해드려요.
                             </p>
                             <Link
-                                href="/mobile/face-analysis"
+                                href="/mobile/skin-profile"
                                 className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[var(--color-primary)] hover:underline">
-                                자세히 보기
+                                피부타입 진단하기
                                 <ArrowRightIcon />
                             </Link>
                         </div>
@@ -295,13 +295,13 @@ export default function MobileHomePage() {
                         {
                             badge: '지금',
                             title: 'AI 성분 추천',
-                            items: ['AI 채팅 상담', '가성비 지수 계산', '화장품 데이터 검색'],
+                            items: ['AI 채팅 상담', '피부타입 맞춤 추천', '가성비 지수 계산', '화장품 데이터 검색'],
                         },
                         {
                             badge: '다음',
                             title: '더 정확하게, 더 가깝게',
                             items: [
-                                '얼굴 피부 진단(안면인식)',
+                                '추천 만족도 피드백 학습',
                                 '화장품 카테고리 확장(크림·토너 등)',
                                 '주요 이커머스 플랫폼 구매 연동 API 도입',
                                 '오픈 기념 이벤트',
@@ -310,7 +310,12 @@ export default function MobileHomePage() {
                         {
                             badge: '이후',
                             title: '함께 성장하기',
-                            items: ['로그인 · 상담 내역 저장', '프리미엄 멤버십 구독', '브랜드 제휴·데이터 리포트'],
+                            items: [
+                                '얼굴 피부 진단(안면인식)',
+                                '로그인 · 상담 내역 저장',
+                                '프리미엄 멤버십 구독',
+                                '브랜드 제휴·데이터 리포트',
+                            ],
                         },
                     ].map((phase, idx) => (
                         <AnimateOnScroll key={phase.badge} delay={idx * 100}>

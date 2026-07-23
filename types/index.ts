@@ -6,6 +6,9 @@ export type CategoryKey =
   | "pore"
   | "texture";
 
+// 피부타입 (유수분 밸런스 축). 민감도는 별도 boolean으로 둠
+export type SkinBaseType = "dry" | "oily" | "combination";
+
 export interface Ingredient {
   id: string;
   name: string;
@@ -21,6 +24,12 @@ export interface Ingredient {
   // lib/safety.ts에서 임신·수유 언급 감지되면 이 값 가진 성분 강제 제외.
   // 카테고리 분류 결과와 무관하게 항상 적용되는 안전장치임
   pregnancyUnsafe?: boolean;
+  // 아래 3개는 피부타입 프로필용. goodFor는 "일반~지성" 같은 자유텍스트라
+  // 문자열 매칭하면 오탐 나서, irritant/pregnancyUnsafe처럼 구조화 필드로 따로 둠.
+  // lib/skinProfile.ts의 applySkinTypePreference가 이 값으로 순서 재정렬함
+  suitableFor?: SkinBaseType[]; // 특히 잘 맞는 타입
+  cautionFor?: SkinBaseType[]; // 안 맞을 수 있는 타입
+  sensitiveFriendly?: boolean; // 민감성에 순한지
 }
 
 export interface Category {
@@ -87,6 +96,8 @@ export interface AiIngredientsMessage {
   // 없으면(예전 대화 기록) categoryKey로 정적 데이터 다시 조회해서 폴백
   ingredients?: Ingredient[];
   safetyNotice?: string;
+  // 피부타입 프로필 반영해서 순서 바꿨을 때 뜨는 안내. safetyNotice와 별개
+  skinTypeNotice?: string;
   usedAi?: boolean;
   createdAt: number;
 }
