@@ -2,7 +2,7 @@
 
 import { getIngredientInCategory, getAllUniqueIngredients } from "@/lib/ingredients";
 import { getBudget } from "@/lib/budgets";
-import { SCORE_WEIGHTS } from "@/lib/scoring/calculator";
+import { SCORE_WEIGHTS } from "@/lib/scoring/weights";
 import ScoreBar from "@/components/ScoreBar";
 import type { AiResultMessage } from "@/types";
 

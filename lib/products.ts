@@ -1,3 +1,6 @@
+// supabase-js를 딸고 오는 파일이라 클라이언트 번들에 새면 안 됨.
+// 클라이언트 컴포넌트가 실수로 import하면 빌드가 여기서 터짐 (재발 방지 가드)
+import 'server-only';
 import type { Product } from '@/types';
 import { getSupabaseClient } from '@/lib/supabase/client';
 

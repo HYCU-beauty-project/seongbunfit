@@ -22,7 +22,12 @@ export default function RootLayout({
         precedence="default"
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
       />
-      <body className="min-h-full flex flex-col">{children}</body>
+      {/* suppressHydrationWarning: ColorZilla·Grammarly 같은 브라우저 확장이
+          body에 속성(cz-shortcut-listen 등)을 주입해서 하이드레이션 경고 뜨는 거
+          막음. 이 속성 하나만 억제하고 자식 컴포넌트의 진짜 하이드레이션 오류는 그대로 잡힘 */}
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

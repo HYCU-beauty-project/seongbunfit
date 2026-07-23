@@ -1,16 +1,10 @@
 import type { BudgetOption, Ingredient, Product, ScoredProduct } from '@/types';
 import { getProductsForIngredient } from '@/lib/products';
+import { SCORE_WEIGHTS } from '@/lib/scoring/weights';
 
-/**
- * 최종 점수 = (핵심성분 배치점수 × 0.60) + (ml당 가격점수 × 0.30) + (예산점수 × 0.10)
- * 팀 기획서(성분핏.pdf) 기준 가중치. 랜딩페이지 초기 시안의 50/30/20 문구와
- * 다르길래 확인해보니 60/30/10으로 최종 확정됨 (2026.07.12)
- */
-export const SCORE_WEIGHTS = {
-    placement: 0.6,
-    price: 0.3,
-    budget: 0.1,
-};
+// SCORE_WEIGHTS는 lib/scoring/weights.ts로 분리함 (클라이언트 번들 누출 방지).
+// 기존에 여기서 import하던 곳들 위해 재수출
+export { SCORE_WEIGHTS };
 
 // 배치 점수: 실제위치 / 기준위치 배수에 따른 구간 점수
 // x1.0 이하 -> 100, x3.0 -> 20, x3.0 초과 -> 0 (구간 보간)
